@@ -25,16 +25,16 @@
    理由：1000 用户规模不需要微服务；服务端渲染能低成本满足「只读路径在没有 JavaScript 时也能工作」的要求。备选（SPA + 独立 API 服务）因更重、且对匿名抓取/读取延迟更不利而被否决。
 
 2. Formatter 作为带翻译对注册表的纯库。
-   每一个（资产类型, src, dst）对注册一个纯函数 `translate(sourceTree) -> targetTree + lossyNotes`。能力矩阵端点读取该注册表，因此代码与矩阵不会漂移。无 I/O 的纯函数给出确定性（规格要求），并使 golden-fixture 测试变得简单。备选（LLM 辅助翻译）在 Phase 1 被否决：非确定性，违反确定性要求；以后可以作为 cross-transfer 文档的离线撰写辅助再回来。
+   每一个（资产类型, src, dst）对注册一个纯函数 `translate(sourceTree) -> targetTree + lossyNotes`。能力矩阵端点读取该注册表，因此代码与矩阵不会漂移。无 I/O 的纯函数给出确定性（规格要求），并使 golden-fixture 测试变得简单。Phase 1 矩阵：skill、instructions、plugin、subagent 各覆盖 `{codex, agents, claude, openclaw}` 的 12 个有序异对加恒等；mcp 只做 claude 与 codex 互译加恒等。plugin 与 subagent 与 skill 同等，必须翻译，不能只存不转。备选（LLM 辅助翻译）在 Phase 1 被否决：非确定性，违反确定性要求；以后可以作为 cross-transfer 文档的离线撰写辅助再回来。
 
 3. 存储布局为 `<storage-root>/<user-id>/<bucket-id>.git`，使用裸仓库 + 每次变更的 worktree，变更按 bucket 用每 bucket 一把锁串行化。
    不可变 id 让用户名/bucket 重命名只动元数据。每 bucket 锁提供规格要求的原子配额「先检查再提交」；在此规模下争用可忽略。备选（非裸仓库加长期存活的 worktree）被否决：更难做成并发安全。
 
-4. 元数据放在 SQLite（用户、buckets、配额、issues、PRs、安装出处）；git 只保存内容。
-   列表、配额查询，以及 issue/PR 状态需要可查询性；为这些去解析 git 会打爆延迟预算。SQLite（WAL 模式）足以支撑 1000 用户 / 并发 10，并保持运维简单。备选（Postgres）延后到规模需要时再做；数据访问层保持很薄，以便那次迁移成本低。
+4. 元数据放在 SQLite（WAL）；权威 DDL 与字段映射见本次变更的 `schema-sqlite.md`。
+   九张表：`schema_migrations`、`users`、`tokens`、`buckets`、`assets`、`copies`、`issues`、`issue_comments`、`pull_requests`。git 只保存文件字节与 commit 对象，不建 commits 表。列表、配额、issue/PR/copy 出处需要可查询性；为这些去解析 git 会打爆延迟预算。SQLite 足以支撑 1000 用户 / 并发 10。备选（Postgres）延后到规模需要时再做；数据访问层保持很薄，列类型按可迁 Postgres 来选。API JSON 与表列的对应写在 schema 文档里，实现不得另发明一套字段名。
 
-5. 校验作为上传、PR merge 和 install 共用的流水线。
-   每种资产类型一个校验器，产出机器可读的违规项（`rule id + path`），在内容进入 bucket 的所有入口复用，因此 PR merge 和 install 不能绕过上传规则（规格要求）。
+5. 校验作为上传、PR merge 和跨桶 copy 共用的流水线。
+   每种资产类型一个校验器，产出机器可读的违规项（`rule id + path`），在内容进入 bucket 的所有入口复用，因此 PR merge 和 `POST .../copies` 不能绕过上传规则（规格要求）。PR 提议内容是文件树替换列表 `{path, content_text|content_base64, delete?}`，存在 SQLite，不是 git patch。
 
 6. 认证：email+password 加盐哈希，Bearer API tokens；私有 bucket 拒绝一律回答 404。
    返回 404 而不是 403 是规格层的反枚举决策。OAuth/社交登录延后。
@@ -46,7 +46,13 @@
    ADR 要求一个 GitHub 风格的 `user/bucket` 枢纽。因此路径 `/<username>/<bucket-name>` 的页面遵循 GitHub 仓库首页使用的分区：owner/name 标题、可见性标识、仓库导航页签栏、带最近 commit 条的一层文件表、文件下方渲染的 `README.md`，以及右侧 About 侧栏。clone/Code 按钮对应 Install（目标 harness 选择器 + 可复制脚本）。Phase 1 页签是 Code、Issues、Pull requests，以及 Settings（仅 owner）。备选（没有页签的扁平资产倾倒）被否决：它不符合 ADR 所描述的 GitHub 风格产品。
 
 9. 视觉系统是两层混合：全局框对照 pi.dev，仓库页控件对照 GitHub；标识是一只红桶。
-   pi.dev 是接近印刷品的长文站点（白底、近黑字、稀疏页头、很少装饰）。GitHub 仓库首页是更密的 Primer 式控件（下划线页签、文件表、About、徽章）。red-bucket 有意两层都用：落地页和站点头感觉像 pi.dev；bucket 详情页的分区像 GitHub。品牌强调色不是 GitHub 绿，也不是未改过的 emoji：它是 bucket emoji（U+1FAA3）的第一方 SVG，桶身涂成品牌红。不要引入 pi.dev 素材、GitHub Primer CSS 或 octicons。权威标识：`assets/logo.svg`。
+   pi.dev 是接近印刷品的长文站点（白底、近黑字、稀疏页头、很少装饰）。GitHub 仓库首页是更密的 Primer 式控件（下划线页签、文件表、About、徽章）。red-bucket 有意两层都用：落地页和站点头感觉像 pi.dev；bucket 详情页的分区像 GitHub。品牌强调色不是 GitHub 绿，也不是未改过的 emoji：它是 bucket emoji（U+1FAA3）的第一方 SVG，桶身涂成品牌红。不要引入 pi.dev 素材、GitHub Primer CSS 或 octicons。权威源文件：`openspec/changes/add-red-bucket-mvp/assets/logo.svg`；实现时复制进服务静态文件，归档本变更后仍以服务内那份为准。
+
+10. HTTP 契约以 `api-catalog.md` 为唯一表面，三个「install」名字不得混用。
+    全部面向用户的 JSON 走 `/api/v1/`。Web UI、日后 CLI、移动端、官方 skill 或 MCP 客户端都消费这一套，Phase 1 不为后几类另开端点。分页只实现 `page` + `per_page`（默认 30，最大 100）；出现 `cursor` 查询参数一律 422。凡 201 带 `Location`。三个名字：`copy` 是 `POST .../copies`（跨桶复制加 provenance，JSON 类型叫 InstallRecord）；`install-script` 是 `GET .../install-script`（给本机落盘的 shell 文本）；`translated fetch` 是 `GET .../translated`。不要做 `POST .../install`。错误信封与稳定 `code` 以目录 Conventions 为准。私有桶对非 owner 一律 404 不是 403。
+
+11. 实现栈以 `tech-stack.md` 为准：Python 3.12、FastAPI、Jinja2、uvicorn、标准库 sqlite3 薄 DAL、系统 git 子进程、Argon2id、pytest、Locust、uv、ruff。
+    用户怎么走完注册、建桶、上传、翻译拉取、安装脚本、copy、issue、PR，以 `user-flows.md` 的时序为准。换语言或框架必须先改选型文档。备选里最强的是 Go，本期不用。
 
 ## Bucket 详情页（GitHub 对照）
 
@@ -149,3 +155,4 @@ Logo：产品标识就是 bucket emoji，并把桶身变成红色。交付一份
 
 - 域名未定（ADR 留空）——不影响规格；安装脚本必须把基础 URL 做成模板。
 - Phase 1 等价性实验要固定哪些 harness 版本（首次运行时记入各 cross-transfer 文档）。
+- Token 过期策略、速率限制（429）、CSRF、HTTPS 终止留给部署层；Phase 1 规格只要求 logout 撤销当前枚 token、服务端只存哈希。语言与框架已在 `tech-stack.md` 选定，不再是未决项。
