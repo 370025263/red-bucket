@@ -1,0 +1,44 @@
+schema: spec-driven
+
+context: |
+  Project: red-bucket - a hub for AI agent assets (skills, MCP tools,
+  CLAUDE.md/AGENTS.md, subagents, plugins) organized as user/bucket repos,
+  similar to GitHub/HuggingFace namespaces.
+  Core value: cross-harness format translation (codex/claude/agents/openclaw
+  styles) exposed via RESTful API; users upload from any harness and fetch
+  in the format of their target harness.
+  Storage: git repos on filesystem (no object storage), isolated per user id.
+  Quotas: 5 buckets per user, 10MB per bucket.
+  Source design doc: sdd/adr/platform.md (Chinese). Phase 1 excludes: mobile
+  app, git clone protocol access.
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
