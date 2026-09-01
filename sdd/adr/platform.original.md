@@ -63,9 +63,6 @@
 
 测试使用mock用户，进行跨harness的迁移，同样功能在迁移前和迁移后保持一致。
 
-### 原文存档
-OpenSpec 变更 `add-red-bucket-mvp` 细化之前的原文见 `sdd/adr/platform.original.md`。不要改那份副本。
-
 
 
 
