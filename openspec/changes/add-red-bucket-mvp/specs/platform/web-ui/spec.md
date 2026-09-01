@@ -1,87 +1,85 @@
-> Chinese translation: `spec.zh.md`
-
 ## Purpose
 
-Defines the lightweight web frontend: pi.dev-like global chrome, a GitHub-like bucket detail page, red-bucket copy, and a red bucket mark. Browse public buckets, manage one's own buckets, and surface the one-click install script.
+定义轻量 Web 前端：对照 pi.dev 的全局框、对照 GitHub 的 bucket 详情页、red-bucket 自己的文案，以及红色 bucket 标识。浏览公开 buckets，管理自己的 buckets，并展示一键安装脚本。
 
 ## ADDED Requirements
 
 ### Requirement: Public browsing pages
-The web UI SHALL provide anonymous-accessible pages for: the landing page, a user profile page listing that user's public buckets, and a bucket detail page at path `/<username>/<bucket-name>` that follows the GitHub repository-home regions defined below.
+Web UI MUST提供可匿名访问的页面，用于：落地页、列出该用户公开 buckets 的用户资料页，以及路径为 `/<username>/<bucket-name>`、并遵循下文所定义的 GitHub 仓库首页分区的 bucket 详情页。
 
 #### Scenario: Bucket page renders anonymously
-- **WHEN** an unauthenticated visitor opens a public bucket's page
-- **THEN** the page renders the Code-tab regions (heading, tabs, file table, About, install snippet) with no login prompt blocking the content
+- **WHEN** 未认证访客打开某个公开 bucket 的页面
+- **THEN** 该页渲染 Code 页签分区（标题、页签、文件表、About、安装片段），没有登录提示挡住内容
 
 #### Scenario: Private bucket page hidden
-- **WHEN** an unauthenticated visitor opens a private bucket's URL
-- **THEN** the UI shows the same not-found page as for a nonexistent bucket
+- **WHEN** 未认证访客打开某个私有 bucket 的 URL
+- **THEN** UI 展示与不存在的 bucket 相同的未找到页
 
 ### Requirement: Authenticated management pages
-The web UI SHALL let a logged-in user register/login, create a bucket (with template, visibility, and optional description), upload assets, toggle visibility, edit description, view quota usage, delete buckets, and manage issues and pull requests on their public buckets — all backed exclusively by the public `/api/v1/` endpoints.
+Web UI MUST让已登录用户注册/登录、创建 bucket（带模板、可见性和可选 description）、上传资产、切换可见性、编辑 description、查看配额用量、删除 buckets，以及管理其公开 buckets 上的 issues 和 pull requests——全部只由公开的 `/api/v1/` 端点支撑。
 
 #### Scenario: Bucket created through UI
-- **WHEN** a logged-in user completes the create-bucket form choosing the `agents` template and `public` visibility
-- **THEN** the UI navigates to the new bucket page showing the template skeleton and public badge
+- **WHEN** 已登录用户填完创建 bucket 表单，选择 `agents` 模板和 `public` 可见性
+- **THEN** UI 导航到新 bucket 页，展示模板骨架和 public 标识
 
 #### Scenario: UI uses public API only
-- **WHEN** any UI management action is performed with the browser network log recorded
-- **THEN** every backend call targets documented `/api/v1/` endpoints (no private endpoints)
+- **WHEN** 任何 UI 管理动作在记录浏览器网络日志的情况下被执行
+- **THEN** 每一次后端调用都指向已文档化的 `/api/v1/` 端点（没有私有端点）
 
 ### Requirement: Visual style baseline
-The web UI SHALL use a two-layer visual system: pi.dev-like global chrome (white canvas, near-black type, sparse header, content-first, fast-loading) and GitHub-like repo-page widgets (underlined tabs, one-level file table, About sidebar, 1px `#d0d7de` borders, modest radius, `#f6f8fa` canvas behind the repo well, `#0969da` links). Naming and copy MUST be red-bucket's own. The implementation MUST reuse the named tokens in `design.md` (`--rb-bucket`, `--rb-bucket-ink`, `--rb-fg`, `--rb-muted`, `--rb-border`, `--rb-canvas`, `--rb-surface`, `--rb-link`). Pages MUST be usable without client-side JavaScript for read-only browsing paths. The UI MUST NOT vendor pi.dev assets, GitHub Primer CSS, octicons, or GitHub branding.
+Web UI MUST使用两层视觉系统：对照 pi.dev 的全局框（白底、近黑字、稀疏页头、内容优先、加载快）和对照 GitHub 的仓库页控件（下划线页签、一层文件表、About 侧栏、1px `#d0d7de` 边框、克制圆角、仓库井后的 `#f6f8fa` 底、`#0969da` 链接）。命名和文案必须是 red-bucket 自己的。实现必须复用 `design.md` 中已命名的 tokens（`--rb-bucket`、`--rb-bucket-ink`、`--rb-fg`、`--rb-muted`、`--rb-border`、`--rb-canvas`、`--rb-surface`、`--rb-link`）。页面在只读浏览路径上必须在没有客户端 JavaScript 时仍可使用。UI 不得引入 pi.dev 素材、GitHub Primer CSS、octicons 或 GitHub 品牌。
 
 #### Scenario: Read path works without JavaScript
-- **WHEN** a public bucket page is loaded with JavaScript disabled
-- **THEN** the heading, tab bar, file table, About fields, and install-script text are still visible in the served HTML
+- **WHEN** 某个公开 bucket 页在禁用 JavaScript 的情况下被加载
+- **THEN** 标题、页签栏、文件表、About 字段和安装脚本文本在所服务的 HTML 中仍然可见
 
 #### Scenario: Repo well uses GitHub-like chrome
-- **WHEN** a visitor opens a public bucket detail page
-- **THEN** the repo well sits on the canvas color, the file table and About are bordered surfaces, the tab bar is underlined, and the Install control uses the brand red (not GitHub green)
+- **WHEN** 访客打开某个公开 bucket 详情页
+- **THEN** 仓库井坐在 canvas 色上，文件表和 About 是带边框的表面，页签栏带下划线，并且 Install 控件使用品牌红（不是 GitHub 绿）
 
 ### Requirement: Red bucket mark
-The product mark SHALL be a first-party SVG of the bucket emoji (U+1FAA3) with the pail body filled brand red (`#C41E3A`) and the handle/rim in `#9B1830`, as stored at `openspec/changes/add-red-bucket-mvp/assets/logo.svg` (and the same asset copied into the service static files at implementation). The system emoji 🪣 MUST NOT be used as the shipped logo. The mark MUST appear in the site header next to the `red-bucket` wordmark (linking home) and MUST be the favicon.
+产品标识MUST是 bucket emoji（U+1FAA3）的第一方 SVG，桶身填充品牌红（`#C41E3A`），提手和桶沿为 `#9B1830`，以 `openspec/changes/add-red-bucket-mvp/assets/logo.svg` 为准（实现时把同一份资源复制进服务的静态文件）。系统 emoji 🪣 不得当作交付 logo。该标识必须出现在站点头里、`red-bucket` 字标旁边（链到首页），并且必须是 favicon。
 
 #### Scenario: Header shows red bucket mark
-- **WHEN** a visitor opens the landing page or a public bucket page
-- **THEN** the site header contains the red-bucket SVG mark and the `red-bucket` wordmark, and the document favicon is that same mark
+- **WHEN** 访客打开落地页或某个公开 bucket 页
+- **THEN** 站点头包含 red-bucket SVG 标识和 `red-bucket` 字标，并且文档 favicon 是同一标识
 
 ### Requirement: GitHub-like bucket header and tabs
-The bucket detail page SHALL use a GitHub-repository heading `username / bucket-name` with a Public or Private badge, and a repository-navigation tab bar with Code (default), Issues, Pull requests, and Settings. Issues and Pull requests tabs MUST show the count of open items. The Settings tab MUST be rendered only for the bucket owner; other viewers MUST NOT see the tab, and a non-owner request to `/<username>/<bucket-name>/settings` MUST receive the same not-found page as a missing bucket. Phase 1 MUST NOT render Star, Watch, Fork, or extra GitHub tabs (Actions, Projects, Wiki, Security, Insights, Discussions).
+Bucket 详情页MUST使用 GitHub 仓库式标题 `username / bucket-name` 加上 Public 或 Private 标识，以及带有 Code（默认）、Issues、Pull requests 和 Settings 的仓库导航页签栏。Issues 和 Pull requests 页签必须显示未关闭条目的数量。Settings 页签必须只为 bucket owner 渲染；其他查看者不得看到该页签，并且非 owner 请求 `/<username>/<bucket-name>/settings` 必须得到与缺失 bucket 相同的未找到页。Phase 1 不得渲染 Star、Watch、Fork，或额外的 GitHub 页签（Actions、Projects、Wiki、Security、Insights、Discussions）。
 
 #### Scenario: Public header and tabs
-- **WHEN** an unauthenticated visitor opens a public bucket that has 2 open issues and 1 open pull request
-- **THEN** the page heading is `username / bucket-name`, a Public badge is visible, and the tab bar includes Code, Issues (2), and Pull requests (1), and does not include Settings, Star, Watch, or Fork
+- **WHEN** 未认证访客打开一个有 2 个未关闭 issues 和 1 个未关闭 pull request 的公开 bucket
+- **THEN** 页面标题是 `username / bucket-name`，Public 标识可见，页签栏包含 Code、Issues (2) 和 Pull requests (1)，并且不包含 Settings、Star、Watch 或 Fork
 
 #### Scenario: Owner sees Settings
-- **WHEN** the bucket owner opens that same public bucket
-- **THEN** the tab bar also includes Settings, and opening `/<username>/<bucket-name>/settings` shows visibility, description, quota, and delete controls
+- **WHEN** bucket owner 打开同一个公开 bucket
+- **THEN** 页签栏还包含 Settings，并且打开 `/<username>/<bucket-name>/settings` 会显示可见性、description、配额和删除控件
 
 ### Requirement: Code tab file browser
-The Code tab SHALL present a one-level directory browser of the current working tree (HEAD), not a flat type dump, at `/<username>/<bucket-name>` for the root and `/<username>/<bucket-name>/tree/<path>` for a directory. Each file row MUST show name, last commit message, and last-updated time; when the row is a stored asset it MUST also show asset type and source harness. A latest-commit bar MUST show the current tree's latest commit message, author, short hash (linking to `/commit/<sha>`), timestamp, and commit count (linking to `/commits`). Clicking a directory MUST navigate to its `tree` URL; clicking a file MUST navigate to `/<username>/<bucket-name>/blob/<path>`. The GitHub clone/Code button is replaced by an Install control: target-harness selector plus a copyable install script. The owner MUST have an upload entry on this tab. There is no branch selector in Phase 1.
+Code 页签MUST把当前工作树（HEAD）呈现为一层目录浏览器，而不是扁平的类型倾倒，根目录在 `/<username>/<bucket-name>`，目录在 `/<username>/<bucket-name>/tree/<path>`。每一文件行必须显示 name、last commit message 和 last-updated time；当该行是一份已存资产时，还必须显示资产类型和源 harness。最近 commit 条必须显示当前树的最新 commit message、author、短 hash（链到 `/commit/<sha>`）、时间戳，以及 commit 计数（链到 `/commits`）。点击目录必须导航到其 `tree` URL；点击文件必须导航到 `/<username>/<bucket-name>/blob/<path>`。GitHub 的 clone/Code 按钮由 Install 控件替代：目标 harness 选择器外加可复制的安装脚本。Owner 必须在此页签上拥有上传入口。Phase 1 没有分支选择器。
 
 #### Scenario: Directory listing with commit bar
-- **WHEN** a visitor opens a public bucket whose root contains a `skills/` directory and a `README.md` file, and the bucket has at least one commit
-- **THEN** the Code tab shows a latest-commit bar and a file table with those two rows (directory then files), each file row including last commit message and last-updated time
+- **WHEN** 访客打开一个根目录含有 `skills/` 目录和 `README.md` 文件、并且至少有一次 commit 的公开 bucket
+- **THEN** Code 页签显示最近 commit 条，以及含有那两行的文件表（目录在前，文件在后），每个文件行包含 last commit message 和 last-updated time
 
 #### Scenario: Nested path and blob
-- **WHEN** a visitor opens `/<username>/<bucket-name>/tree/skills` and then a file under it
-- **THEN** the file table lists only that directory's children, and the file opens at `/<username>/<bucket-name>/blob/skills/<filename>`
+- **WHEN** 访客打开 `/<username>/<bucket-name>/tree/skills`，然后打开其下的一个文件
+- **THEN** 文件表只列出该目录的子项，并且该文件在 `/<username>/<bucket-name>/blob/skills/<filename>` 打开
 
 ### Requirement: About sidebar and README
-The Code tab SHALL include a right-hand About sidebar (GitHub About analogue) showing: optional description (plain text, max 350 characters), visibility, current storage usage and the 10MB limit, template style if the bucket was created from one, a count of stored assets by source harness, and a link to `README.md` when that file exists at the current directory. When a `README.md` exists in the current directory (case-insensitive name), the page MUST render it as HTML below the file table. When it is absent, visitors MUST see no README block; the owner MUST see a prompt to add one. Phase 1 About MUST NOT include website, topics, stars, releases, packages, or a contributor graph.
+Code 页签MUST包含右侧 About 侧栏（GitHub About 的对照物），展示：可选 description（纯文本，最多 350 个字符）、可见性、当前存储用量和 10MB 上限、若该 bucket 从模板创建则带模板风格、按源 harness 统计的已存资产数量，以及当前目录存在 `README.md` 时指向它的链接。当当前目录存在 `README.md`（名称大小写不敏感）时，页面必须把它作为 HTML 渲染在文件表下方。当它不存在时，访客必须看不到 README 块；owner 必须看到添加提示。Phase 1 的 About 不得包含 website、topics、stars、releases、packages 或贡献者图。
 
 #### Scenario: README rendered and About populated
-- **WHEN** a public bucket has a root `README.md`, a non-empty description, and stored assets from harness `claude`
-- **THEN** the Code tab renders that README below the file table, and About shows the description, visibility, usage, 10MB limit, and a harness mix that includes `claude`
+- **WHEN** 一个公开 bucket 在根目录有 `README.md`、有非空 description，并存有来自 harness `claude` 的资产
+- **THEN** Code 页签在文件表下方渲染该 README，并且 About 显示 description、可见性、用量、10MB 上限，以及包含 `claude` 的 harness mix
 
 #### Scenario: Empty bucket owner prompt
-- **WHEN** the owner opens a newly created empty public bucket
-- **THEN** the file table has no content rows, visitors would see no README block, and the owner sees prompts to add a README and to upload
+- **WHEN** owner 打开一个新创建的空公开 bucket
+- **THEN** 文件表没有内容行，访客会看不到 README 块，并且 owner 看到添加 README 与上传的提示
 
 ### Requirement: Issues and pull-request tabs
-The Issues and Pull requests tabs SHALL list the bucket's issues and pull requests at `/<username>/<bucket-name>/issues` and `/<username>/<bucket-name>/pulls`, each row showing number, title, open or closed state, author, and created time, and SHALL link to `/issues/<n>` and `/pulls/<n>` detail pages. Authenticated users MUST be able to open an issue on a public bucket from the Issues tab. Role rules remain those in `community/collaboration`.
+Issues 和 Pull requests 页签MUST在 `/<username>/<bucket-name>/issues` 和 `/<username>/<bucket-name>/pulls` 列出该 bucket 的 issues 和 pull requests，每一行显示编号、标题、open 或 closed 状态、作者和创建时间，并且必须链到 `/issues/<n>` 和 `/pulls/<n>` 详情页。已认证用户必须能从 Issues 页签在公开 bucket 上开 issue。角色规则仍是 `community/collaboration` 中的那些。
 
 #### Scenario: Issues tab lists open items
-- **WHEN** a visitor opens the Issues tab of a public bucket that has one open issue titled `broken skill`
-- **THEN** the list shows that issue with its number, title, open state, author, and created time, and the title links to `/<username>/<bucket-name>/issues/<n>`
+- **WHEN** 访客打开一个有一条标题为 `broken skill` 的未关闭 issue 的公开 bucket 的 Issues 页签
+- **THEN** 列表显示该 issue 及其编号、标题、open 状态、作者和创建时间，并且标题链到 `/<username>/<bucket-name>/issues/<n>`

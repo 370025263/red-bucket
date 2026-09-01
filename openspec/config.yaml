@@ -11,22 +11,22 @@ context: |
   Quotas: 5 buckets per user, 10MB per bucket.
   Source design doc: sdd/adr/platform.md (Chinese). Phase 1 excludes: mobile
   app, git clone protocol access.
-  Language: every planning artifact (proposal, design, specs, tasks) MUST
-  have a faithful Chinese sibling (`*.zh.md`) that respects original
-  sentence boundaries and keeps identifiers, paths, status codes, and
-  error codes unchanged. test-plan.md is authored in Chinese.
+  Language: write proposal, design, specs, and tasks in Chinese.
+  Keep Requirement/Scenario/WHEN/THEN keywords and keep identifiers,
+  paths, status codes, and error codes unchanged. Do not add English
+  sibling files. test-plan.md is authored in Chinese.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
 rules:
   proposal:
-    - Also write a sentence-for-sentence Chinese sibling proposal.zh.md.
+    - Write proposal.md in Chinese.
   design:
-    - Also write a sentence-for-sentence Chinese sibling design.zh.md.
+    - Write design.md in Chinese.
   specs:
-    - Also write spec.zh.md beside each spec.md; keep Requirement/Scenario/WHEN/THEN keywords; translate prose sentence-for-sentence.
+    - Write spec.md in Chinese; keep Requirement/Scenario/WHEN/THEN keywords.
   tasks:
-    - Also write a sentence-for-sentence Chinese sibling tasks.zh.md.
+    - Write tasks.md in Chinese.
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.

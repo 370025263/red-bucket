@@ -1,62 +1,60 @@
-> Chinese translation: `spec.zh.md`
-
 ## Purpose
 
-The formatter is red-bucket's core value: at fetch time it converts assets stored in one harness's format into the format of the requesting harness, preserving functional behavior, with per-pair rules documented and experimentally verified.
+formatter 是 red-bucket 的核心价值：在拉取时，它把以某一种 harness 格式存储的资产转换成请求方 harness 的格式，保持功能行为，并且每一对的规则都有文档、都经实验验证。
 
 ## ADDED Requirements
 
 ### Requirement: Fetch-time translation
-The system SHALL provide a fetch endpoint that takes a target harness (`codex`, `claude`, `agents`, `openclaw`) and returns the requested asset (or whole bucket) converted from its source harness format to the target harness format, including the target-appropriate file names, directory layout, and metadata schema. Fetching with the target equal to the source harness MUST return content byte-identical to the raw download.
+系统MUST提供一个拉取端点，接受目标 harness（`codex`、`claude`、`agents`、`openclaw`），并把所请求的资产（或整个 bucket）从其源 harness 格式转换成目标 harness 格式后返回，包括目标侧合适的文件名、目录布局和元数据 schema。当目标等于源 harness 时拉取，必须返回与 raw 下载逐字节一致的内容。
 
 #### Scenario: Claude skill fetched as codex
-- **WHEN** a client fetches a skill stored with source harness `claude` specifying target harness `codex`
-- **THEN** the response contains the skill re-laid-out per the codex convention with name, description, instructions, and referenced auxiliary files preserved, as defined in `cross-transfer/claude-2-codex.md`
+- **WHEN** 客户端拉取一份源 harness 为 `claude` 的 skill，并指定目标 harness 为 `codex`
+- **THEN** 响应包含按 codex 约定重新布局的 skill，name、description、instructions 以及被引用的辅助文件得以保留，定义见 `cross-transfer/claude-2-codex.md`
 
 #### Scenario: Identity translation is byte-identical
-- **WHEN** a client fetches an asset specifying a target harness equal to the asset's source harness
-- **THEN** the returned content is byte-identical to the raw download of that asset
+- **WHEN** 客户端拉取一份资产，并指定目标 harness 等于该资产的源 harness
+- **THEN** 返回的内容与该资产的 raw 下载逐字节一致
 
 #### Scenario: Whole-bucket fetch
-- **WHEN** a client fetches an entire bucket for a target harness
-- **THEN** the response is an archive in which every translatable asset is converted and arranged in the target harness's expected directory positions, ready to be unpacked into the user's local harness config
+- **WHEN** 客户端按某个目标 harness 拉取整个 bucket
+- **THEN** 响应是一份归档，其中每一个可翻译资产都已转换，并按目标 harness 期望的目录位置排布，可直接解包进用户的本地 harness 配置
 
 ### Requirement: Supported translation pairs declared
-The system SHALL expose a capability matrix endpoint declaring, per asset type, which source-to-target harness pairs are supported. Requests for an unsupported pair MUST fail with HTTP 501 and error code `translation_unsupported`, never silently return untranslated content. Phase 1 MUST support at least: `skill` and `instructions` between all four harness styles, and `mcp` between `claude` and `codex`.
+系统MUST暴露一个能力矩阵端点，按资产类型声明哪些源到目标 harness 对受支持。对不受支持的对的请求必须以 HTTP 501 和错误码 `translation_unsupported` 失败，绝不能静默返回未翻译内容。Phase 1 必须至少支持：`skill` 和 `instructions` 在全部四种 harness 风格之间，以及 `mcp` 在 `claude` 与 `codex` 之间。
 
 #### Scenario: Capability matrix served
-- **WHEN** a client requests the translation capability matrix
-- **THEN** the response enumerates supported (asset type, source, target) triples consistent with the published cross-transfer docs
+- **WHEN** 客户端请求翻译能力矩阵
+- **THEN** 响应枚举受支持的（资产类型, source, target）三元组，并与已发布的 cross-transfer 文档一致
 
 #### Scenario: Unsupported pair rejected explicitly
-- **WHEN** a client requests a translation pair absent from the matrix
-- **THEN** the system responds HTTP 501 with `translation_unsupported` and does not return the untranslated source content
+- **WHEN** 客户端请求矩阵中不存在的翻译对
+- **THEN** 系统响应 HTTP 501，带上 `translation_unsupported`，并且不返回未翻译的源内容
 
 ### Requirement: Functional equivalence of translated assets
-Translation SHALL preserve the functional behavior of the asset: after translation, the asset installed into the target harness MUST trigger under equivalent conditions and produce equivalent effect as the source asset in the source harness. Information that has no target-side equivalent MUST be preserved in a designated compatibility note within the output rather than silently dropped.
+翻译MUST保持资产的功能行为：翻译之后，安装进目标 harness 的资产必须在等价条件下触发，并产生与源资产在源 harness 中等价的效果。在目标侧没有等价物的信息必须保存在输出内指定的兼容性说明中，而不是被静默丢掉。
 
 #### Scenario: Migrated skill behaves equivalently
-- **WHEN** a benchmark skill is installed in its source harness and its translation is installed in the target harness, and both are exercised with the same task prompt
-- **THEN** both harnesses recognize and invoke the skill, and the observable outcome matches per the equivalence checklist in the corresponding cross-transfer doc
+- **WHEN** 一份基准 skill 被安装进其源 harness，其译本被安装进目标 harness，并且两者都用同一任务 prompt 行使
+- **THEN** 两个 harness 都识别并调用该 skill，可观察结果按对应 cross-transfer 文档中的等价性 checklist 匹配
 
 #### Scenario: Untranslatable fields preserved as notes
-- **WHEN** a source asset contains a field with no equivalent in the target harness
-- **THEN** the translated output carries that field in a compatibility-notes section and the fetch response flags the asset with a `lossy: true` marker
+- **WHEN** 一份源资产含有在目标 harness 中没有等价物的字段
+- **THEN** 翻译输出把该字段放在 compatibility-notes 一节中，并且拉取响应用 `lossy: true` 标记该资产
 
 ### Requirement: Translation rule documents
-Each supported source-to-target pair SHALL be documented in `cross-transfer/<src>-2-<dst>.md` covering: both harnesses' formats for skill, plugin, mcp, and subagent content; the field-by-field mapping; the user-facing operations during migration; and the behavior changes a user will observe. Each document MUST be validated by a recorded experiment before its pair is marked supported in the capability matrix.
+每一对受支持的源到目标都 MUST记录在 `cross-transfer/<src>-2-<dst>.md` 中，覆盖：两种 harness 对 skill、plugin、mcp 和 subagent 内容的格式；逐字段映射；迁移期间面向用户的操作；以及用户会观察到的行为变化。每一份文档必须在该对被标为能力矩阵中的 supported 之前，由一次有记录的实验验证。
 
 #### Scenario: Doc exists for every supported pair
-- **WHEN** the capability matrix reports a (type, src, dst) triple as supported
-- **THEN** `cross-transfer/<src>-2-<dst>.md` exists and contains the mapping table covering that asset type and a link to its experiment record
+- **WHEN** 能力矩阵把某个（type, src, dst）三元组报告为 supported
+- **THEN** `cross-transfer/<src>-2-<dst>.md` 存在，并包含覆盖该资产类型的映射表，以及指向其实验记录的链接
 
 #### Scenario: Undocumented pair not exposed
-- **WHEN** a translation pair has no validated cross-transfer document
-- **THEN** the capability matrix reports it unsupported
+- **WHEN** 某一翻译对没有经过验证的 cross-transfer 文档
+- **THEN** 能力矩阵把它报告为 unsupported
 
 ### Requirement: Deterministic translation
-Translation SHALL be deterministic: the same source content and target harness MUST always produce identical output bytes, so fetches are cacheable and diffable.
+翻译MUST是确定的：同一源内容和同一目标 harness 必须始终产出相同的输出字节，从而使拉取可缓存、可 diff。
 
 #### Scenario: Repeated fetch identical
-- **WHEN** the same asset at the same commit is fetched twice for the same target harness
-- **THEN** both responses are byte-identical
+- **WHEN** 同一 commit 上的同一资产为同一目标 harness 被拉取两次
+- **THEN** 两次响应逐字节一致

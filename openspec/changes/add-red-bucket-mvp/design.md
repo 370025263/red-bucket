@@ -1,68 +1,66 @@
-> Chinese translation: `design.zh.md`
+# 设计：add-red-bucket-mvp
 
-# Design: add-red-bucket-mvp
+## 背景
 
-## Context
+全新仓库；唯一既有产物是 `sdd/adr/platform.md` 中的 ADR。OpenSpec 细化前的原文冻在 `sdd/adr/platform.original.md`，不得改动。从中继承的约束：存储是文件系统上的 git（不用对象存储），配额是每用户 5 个 bucket、每 bucket 10MB，Phase 1 不含移动应用和 git 协议访问，前端遵循 pi.dev 的轻量风格，头条验收是 1000 用户 / 并发 10 下 p95 < 1s。动机见 `proposal.md`；行为契约见各 delta specs。
 
-Greenfield repository; the only existing artifact is the ADR at `sdd/adr/platform.md`. The pre-OpenSpec wording is frozen at `sdd/adr/platform.original.md` and must not be edited. Constraints inherited from it: storage is git-on-filesystem (no object storage), quotas are 5 buckets/user and 10MB/bucket, Phase 1 excludes mobile app and git protocol access, frontend follows pi.dev's lightweight style, and the headline acceptance is p95 < 1s at 1000 users / concurrency 10. See `proposal.md` for motivation; see the delta specs for behavior contracts.
+## 目标 / 非目标
 
-## Goals / Non-Goals
+**目标：**
 
-**Goals:**
+- 一个可单独部署的服务（API + 服务端渲染 UI），外加一个可隔离测试的 formatter 引擎。
+- 确定性的、由矩阵驱动的翻译，使不支持的对大声失败，已支持的对可用 golden fixtures 做回归测试。
+- 全部验收标准都可以作为自动化测试执行（见 `test-plan.md`）。
 
-- A single deployable service (API + server-rendered UI) plus a formatter engine that is testable in isolation.
-- Deterministic, matrix-driven translation so unsupported pairs fail loudly and supported pairs are regression-testable against golden fixtures.
-- All acceptance criteria executable as automated tests (see `test-plan.md`).
+**非目标：**
 
-**Non-Goals:**
+- 水平扩展 / 多节点存储；Phase 1 目标是单节点，负载画像见各 specs。
+- 协作者/团队权限模型（Phase 1 私有访问仅限 owner）。
+- 市场策展、搜索排序、计费。
+- bucket 页上的 GitHub 社交控件（Star、Watch、Fork）以及额外的 GitHub 页签（Actions、Projects、Wiki、Security、Insights、Discussions）。
 
-- Horizontal scaling / multi-node storage; Phase-1 target is one node with the load profile in the specs.
-- Collaborator/team permission model (owner-only private access in Phase 1).
-- Marketplace curation, search ranking, billing.
-- GitHub social chrome on the bucket page (Star, Watch, Fork) and extra GitHub tabs (Actions, Projects, Wiki, Security, Insights, Discussions).
+## 决策
 
-## Decisions
+1. 单体，服务端渲染 UI，JSON API 位于 `/api/v1/`。
+   理由：1000 用户规模不需要微服务；服务端渲染能低成本满足「只读路径在没有 JavaScript 时也能工作」的要求。备选（SPA + 独立 API 服务）因更重、且对匿名抓取/读取延迟更不利而被否决。
 
-1. Monolith with server-rendered UI, JSON API under `/api/v1/`.
-   Rationale: 1000-user scale needs no microservices; server rendering satisfies the "read path works without JavaScript" requirement cheaply. Alternative (SPA + separate API service) rejected as heavier and worse for anonymous crawl/read latency.
+2. Formatter 作为带翻译对注册表的纯库。
+   每一个（资产类型, src, dst）对注册一个纯函数 `translate(sourceTree) -> targetTree + lossyNotes`。能力矩阵端点读取该注册表，因此代码与矩阵不会漂移。无 I/O 的纯函数给出确定性（规格要求），并使 golden-fixture 测试变得简单。备选（LLM 辅助翻译）在 Phase 1 被否决：非确定性，违反确定性要求；以后可以作为 cross-transfer 文档的离线撰写辅助再回来。
 
-2. Formatter as a pure library with a translation-pair registry.
-   Each (asset type, src, dst) pair registers a pure function `translate(sourceTree) -> targetTree + lossyNotes`. The capability matrix endpoint reads the registry, so code and matrix cannot drift. Pure functions with no I/O give determinism (required by spec) and make golden-fixture testing trivial. Alternative (LLM-assisted translation) rejected for Phase 1: non-deterministic, violates the determinism requirement; may return as an offline authoring aid for cross-transfer docs.
+3. 存储布局为 `<storage-root>/<user-id>/<bucket-id>.git`，使用裸仓库 + 每次变更的 worktree，变更按 bucket 用每 bucket 一把锁串行化。
+   不可变 id 让用户名/bucket 重命名只动元数据。每 bucket 锁提供规格要求的原子配额「先检查再提交」；在此规模下争用可忽略。备选（非裸仓库加长期存活的 worktree）被否决：更难做成并发安全。
 
-3. Storage layout `<storage-root>/<user-id>/<bucket-id>.git` with bare repos + per-mutation worktree, mutations serialized per bucket with a per-bucket lock.
-   Immutable ids keep username/bucket renames metadata-only. The per-bucket lock provides the atomic quota check-then-commit the spec requires; contention is negligible at this scale. Alternative (non-bare repo with long-lived worktree) rejected: harder to make concurrent-safe.
+4. 元数据放在 SQLite（用户、buckets、配额、issues、PRs、安装出处）；git 只保存内容。
+   列表、配额查询，以及 issue/PR 状态需要可查询性；为这些去解析 git 会打爆延迟预算。SQLite（WAL 模式）足以支撑 1000 用户 / 并发 10，并保持运维简单。备选（Postgres）延后到规模需要时再做；数据访问层保持很薄，以便那次迁移成本低。
 
-4. Metadata in SQLite (users, buckets, quotas, issues, PRs, install provenance); git holds only content.
-   Listings, quota lookups, and issue/PR state need queryability; parsing git for them would blow the latency budget. SQLite (WAL mode) is sufficient for 1000 users / concurrency 10 and keeps ops simple. Alternative (Postgres) deferred until scale demands it; the data-access layer stays thin to keep that migration cheap.
+5. 校验作为上传、PR merge 和 install 共用的流水线。
+   每种资产类型一个校验器，产出机器可读的违规项（`rule id + path`），在内容进入 bucket 的所有入口复用，因此 PR merge 和 install 不能绕过上传规则（规格要求）。
 
-5. Validation as a shared pipeline used by upload, PR merge, and install.
-   One validator per asset type produces machine-readable violations (`rule id + path`), reused everywhere content enters a bucket, so PR merges and installs cannot bypass upload rules (spec requirement).
+6. 认证：email+password 加盐哈希，Bearer API tokens；私有 bucket 拒绝一律回答 404。
+   返回 404 而不是 403 是规格层的反枚举决策。OAuth/社交登录延后。
 
-6. Auth: email+password with salted hash, Bearer API tokens; private-bucket denial always answers 404.
-   404-not-403 is a spec-level anti-enumeration decision. OAuth/social login deferred.
+7. 把负载测试作为仓库一等产物（k6 或 Locust 场景 + 1000 个 mock 用户的 seeder），作为预发布门禁运行并产出归档报告。
+   p95 验收是规格要求；让该 harness 在仓库内可复现，是「回归门禁」场景能诚实让一次发布失败的唯一办法。
 
-7. Load test as a first-class repo artifact (k6 or Locust scenario + seeder for 1000 mock users), run as a pre-release gate producing an archived report.
-   The p95 acceptance is a spec requirement; making the harness reproducible in-repo is the only way the "regression gate" scenario can fail a release honestly.
+8. Bucket 详情页照搬 GitHub 的仓库信息结构，不照搬 GitHub 的视觉素材。
+   ADR 要求一个 GitHub 风格的 `user/bucket` 枢纽。因此路径 `/<username>/<bucket-name>` 的页面遵循 GitHub 仓库首页使用的分区：owner/name 标题、可见性标识、仓库导航页签栏、带最近 commit 条的一层文件表、文件下方渲染的 `README.md`，以及右侧 About 侧栏。clone/Code 按钮对应 Install（目标 harness 选择器 + 可复制脚本）。Phase 1 页签是 Code、Issues、Pull requests，以及 Settings（仅 owner）。备选（没有页签的扁平资产倾倒）被否决：它不符合 ADR 所描述的 GitHub 风格产品。
 
-8. Bucket detail page copies GitHub's repository information architecture, not GitHub's visual assets.
-   The ADR asks for a GitHub-like `user/bucket` hub. The page at `/<username>/<bucket-name>` therefore follows the regions a GitHub repository home uses: owner/name heading, visibility badge, a repository-navigation tab bar, a one-level file table with a latest-commit bar, a rendered `README.md` under the files, and a right-hand About sidebar. The clone/Code button maps to Install (target-harness selector + copyable script). Phase 1 tabs are Code, Issues, Pull requests, and Settings (owner only). Alternative (a flat asset dump with no tabs) rejected: it would not match the GitHub-like product the ADR describes.
+9. 视觉系统是两层混合：全局框对照 pi.dev，仓库页控件对照 GitHub；标识是一只红桶。
+   pi.dev 是接近印刷品的长文站点（白底、近黑字、稀疏页头、很少装饰）。GitHub 仓库首页是更密的 Primer 式控件（下划线页签、文件表、About、徽章）。red-bucket 有意两层都用：落地页和站点头感觉像 pi.dev；bucket 详情页的分区像 GitHub。品牌强调色不是 GitHub 绿，也不是未改过的 emoji：它是 bucket emoji（U+1FAA3）的第一方 SVG，桶身涂成品牌红。不要引入 pi.dev 素材、GitHub Primer CSS 或 octicons。权威标识：`assets/logo.svg`。
 
-9. Visual system is a two-layer blend: pi.dev for global chrome, GitHub for repo-page widgets; the mark is a red bucket.
-   pi.dev is a long-form, almost print-like site (white canvas, near-black type, sparse header, little chrome). GitHub's repo home is denser Primer-like widgets (tab underline, file table, About, badges). red-bucket uses both on purpose: landing and site header feel like pi.dev; the bucket detail page's regions feel like GitHub. The brand accent is not GitHub green and not an unmodified emoji: it is a first-party SVG of the bucket emoji (U+1FAA3) with the pail body painted brand red. Do not vendor pi.dev assets, GitHub Primer CSS, or octicons. Canonical mark: `assets/logo.svg`.
+## Bucket 详情页（GitHub 对照）
 
-## Bucket detail page (GitHub analogue)
+默认 URL：`/<username>/<bucket-name>`（Code 页签，工作树根）。子路由遵循 GitHub 的仓库 URL 形状，以便熟悉 GitHub 的用户能够猜到：
 
-Default URL: `/<username>/<bucket-name>` (Code tab, working-tree root). Sub-routes follow GitHub's repo URL shapes so users who know GitHub can guess them:
+- `/<username>/<bucket-name>/tree/<path>` — 目录
+- `/<username>/<bucket-name>/blob/<path>` — 文件
+- `/<username>/<bucket-name>/commits` — 历史列表
+- `/<username>/<bucket-name>/commit/<sha>` — 一次 commit
+- `/<username>/<bucket-name>/issues` 与 `/issues/<n>`
+- `/<username>/<bucket-name>/pulls` 与 `/pulls/<n>`
+- `/<username>/<bucket-name>/settings` — 仅 owner；其他人得到与缺失 bucket 相同的 404
 
-- `/<username>/<bucket-name>/tree/<path>` — directory
-- `/<username>/<bucket-name>/blob/<path>` — file
-- `/<username>/<bucket-name>/commits` — history list
-- `/<username>/<bucket-name>/commit/<sha>` — one commit
-- `/<username>/<bucket-name>/issues` and `/issues/<n>`
-- `/<username>/<bucket-name>/pulls` and `/pulls/<n>`
-- `/<username>/<bucket-name>/settings` — owner only; others get the same 404 as a missing bucket
-
-Layout of the Code tab (desktop):
+Code 页签的布局（桌面）：
 
 ```
 /<username>/<bucket-name>
@@ -80,50 +78,50 @@ Layout of the Code tab (desktop):
 └───────────────────────────────────┴─────────────────────────┘
 ```
 
-GitHub region → Phase 1 mapping:
+GitHub 分区 → Phase 1 映射：
 
-- Heading `owner / repo-name` → `username / bucket-name`.
-- Public/Private badge → same.
-- Star, Watch, Fork → omitted.
-- Tabs Code, Issues, Pull requests, Settings → same four; open-issue and open-PR counts on the tabs. Actions, Projects, Wiki, Security, Insights, Discussions → omitted.
-- Branch selector → omitted. Phase 1 has no git-protocol branch UI; the Code tab browses the current working tree (HEAD). Historical content uses the commits routes already required by git-storage.
-- Code / clone button → Install: target-harness selector and a copyable install script (the existing one-click entry).
-- Add file → owner upload on the Code tab (existing upload pipeline).
-- File table columns name, last commit message, last updated → same, plus asset type and source harness when the row is a stored asset. Listing is one directory level (GitHub behavior), derived from asset paths; it is not a flat type dump.
-- `README.md` under the file table → render the `README.md` in the current directory when present (case-insensitive name). Owner of an empty or README-less bucket sees a prompt to add one; visitors just see no README block.
-- About: description, website, topics, releases, packages, contributors, languages → description (optional, max 350 characters, GitHub's About limit), visibility, storage usage and 10MB limit, template style if the bucket was created from one, and a count of stored assets by source harness (the languages analogue). No website, topics, stars, releases, or contributor graph in Phase 1.
-- Go to file / in-repo search → omitted in Phase 1; a 10MB one-level listing is enough.
+- 标题 `owner / repo-name` → `username / bucket-name`。
+- Public/Private 标识 → 相同。
+- Star、Watch、Fork → 省略。
+- 页签 Code、Issues、Pull requests、Settings → 同样四个；页签上带 open issue 与 open PR 计数。Actions、Projects、Wiki、Security、Insights、Discussions → 省略。
+- 分支选择器 → 省略。Phase 1 没有 git 协议的分支 UI；Code 页签浏览当前工作树（HEAD）。历史内容使用 git-storage 已经要求的 commits 路由。
+- Code / clone 按钮 → Install：目标 harness 选择器和可复制的安装脚本（既有的一键入口）。
+- Add file → owner 在 Code 页签上传（既有上传流水线）。
+- 文件表列 name、last commit message、last updated → 相同，并且当该行是一份已存资产时再加上资产类型和源 harness。列表是一层目录（GitHub 行为），从资产路径派生；它不是扁平的类型倾倒。
+- 文件表下方的 `README.md` → 当前目录存在 `README.md` 时渲染它（名称大小写不敏感）。空 bucket 或没有 README 的 bucket 的 owner 看到添加提示；访客只是看不到 README 块。
+- About：description、website、topics、releases、packages、contributors、languages → description（可选，最多 350 个字符，GitHub 的 About 上限）、可见性、存储用量和 10MB 上限、若从模板创建则带模板风格，以及按源 harness 统计的已存资产数量（languages 的对照物）。Phase 1 没有 website、topics、stars、releases 或贡献者图。
+- Go to file / 仓内搜索 → Phase 1 省略；10MB 的一层列表已经足够。
 
-Empty bucket: file table has no rows (or only the template skeleton if a template was chosen), no README block for visitors, and the owner sees the add-README and upload prompts. Issues and PRs tabs still render their empty lists.
+空 bucket：文件表没有行（若选了模板则只有模板骨架），访客没有 README 块，owner 看到添加 README 与上传提示。Issues 和 PRs 页签仍然渲染它们的空列表。
 
-All Code-tab read regions (heading, tabs, commit bar, file table, README, About, install snippet) MUST be in the served HTML so the no-JavaScript read path still works.
+全部 Code 页签只读分区（标题、页签、commit 条、文件表、README、About、安装片段）必须出现在所服务的 HTML 中，从而使无 JavaScript 的只读路径仍然工作。
 
-## Brand and visual style
+## 品牌与视觉风格
 
-Logo: the product mark is the bucket emoji, with the bucket turned red. Ship a first-party SVG (`assets/logo.svg`) that keeps the emoji's pail-and-handle silhouette and fills the body with `--rb-bucket` (`#C41E3A`). The handle and rim use `--rb-bucket-ink` (`#9B1830`). Do not use the system glyph 🪣 as the shipped logo: host fonts paint it metal or blue, and it cannot be recolored. The same SVG is the favicon and the header mark. The wordmark is `red-bucket` in the UI sans, placed to the right of the mark, linking home.
+Logo：产品标识就是 bucket emoji，并把桶身变成红色。交付一份第一方 SVG（`assets/logo.svg`），保持该 emoji 的桶身加提手轮廓，桶身填充 `--rb-bucket`（`#C41E3A`）。提手和桶沿使用 `--rb-bucket-ink`（`#9B1830`）。不要把系统字形 🪣 当作交付 logo：各平台会把它画成金属色或蓝色，而且无法改色。同一份 SVG 同时用作 favicon 和页头标识。字标是 UI 无衬线体里的 `red-bucket`，放在标识右侧，链到首页。
 
-From pi.dev (global chrome and landing):
+从 pi.dev 对照（全局框和落地页）：
 
-- White page, near-black text, content-first, fast to paint.
-- Sparse site header: mark + wordmark on the left; Login or the signed-in username on the right. No fat marketing nav, no hero gradient, no card grid.
-- System font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`), comfortable body measure on the landing page, little shadow or radius theater.
-- Read paths stay HTML; decoration never blocks content.
+- 白底、近黑字、内容优先、绘制要快。
+- 稀疏的站点头：左侧是标识 + 字标；右侧是 Login 或已登录用户名。没有厚营销导航、没有英雄区渐变、没有卡片网格。
+- 系统字体栈（`-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`），落地页正文行宽舒服，很少阴影或圆角表演。
+- 只读路径保持 HTML；装饰不得挡住内容。
 
-From GitHub (bucket detail page widgets):
+从 GitHub 对照（bucket 详情页控件）：
 
-- Repo heading `username / bucket-name`, Public/Private pill, underlined tab bar with open counts.
-- One-level file table with a latest-commit bar; About sidebar; README under the files.
-- Surfaces are white panels with a 1px `#d0d7de` border and modest radius (~6px), on a light canvas `#f6f8fa` behind the repo well (GitHub's canvas/subtle split).
-- Link color `#0969da` inside repo chrome, so file names and issue titles read like GitHub.
-- Visibility badges and open/closed issue state follow GitHub's quiet pill language, not marketing chips.
+- 仓库标题 `username / bucket-name`、Public/Private 胶囊、带未关闭计数的下划线页签栏。
+- 带最近 commit 条的一层文件表；About 侧栏；文件下方的 README。
+- 表面是带 1px `#d0d7de` 边框和约 6px 圆角的白色面板，仓库井后面是浅底 `#f6f8fa`（GitHub 的 canvas 与 subtle 分层）。
+- 仓库框内的链接色是 `#0969da`，让文件名和 issue 标题读起来像 GitHub。
+- 可见性徽章和 issue 的 open/closed 状态走 GitHub 那种安静的胶囊语言，不是营销芯片。
 
-Brand accent (ours):
+品牌强调色（我们自己的）：
 
-- `--rb-bucket: #C41E3A` is the only loud color. It paints the logo and the primary Install action (GitHub's green Code button becomes a red Install).
-- Hover/active uses `--rb-bucket-ink: #9B1830`.
-- Do not use GitHub green as a primary, and do not introduce a second accent.
+- `--rb-bucket: #C41E3A` 是唯一响亮的颜色。它涂在 logo 上，也涂在主操作 Install 上（GitHub 的绿色 Code 按钮变成红色 Install）。
+- 悬停/激活使用 `--rb-bucket-ink: #9B1830`。
+- 不要把 GitHub 绿当作主色，也不要再引入第二种强调色。
 
-Tokens the implementation MUST name and reuse:
+实现必须命名并复用的 tokens：
 
 - `--rb-bucket` `#C41E3A`
 - `--rb-bucket-ink` `#9B1830`
@@ -134,20 +132,20 @@ Tokens the implementation MUST name and reuse:
 - `--rb-surface` `#ffffff`
 - `--rb-link` `#0969da`
 
-## Risks / Trade-offs
+## 风险 / 权衡
 
-- [Functional equivalence is judged by harness behavior we don't control] → Pin harness versions in the experiment environment for cross-transfer docs; equivalence checklist per pair lives in the doc and is re-run when a harness updates.
-- [Translated fetch of a whole 10MB bucket may threaten the 1s p95] → Translation is deterministic per commit, so cache translated archives keyed by (commit, target); load test includes translated-fetch in its mix to catch regressions.
-- [SQLite write contention under concurrent collaboration bursts] → WAL mode + short transactions; scale ceiling documented; data layer kept swappable for Postgres.
-- [Git worktree size ≠ user intuition of 10MB (history grows beyond working tree)] → Quota is defined on working tree (spec); run `git gc` periodically and document that history overhead is not billed to the user.
-- [pi.dev style "照抄" carries copying risk] → Reproduce the sparse header, white canvas, and content-first type, not pi.dev assets or copy.
-- [GitHub-like repo page "照抄" carries the same copying risk] → Reproduce information architecture, URL shapes, file-table density, and quiet borders; do not vendor Primer CSS, octicons, or GitHub branding. The primary action is red Install, not green Code.
+- [功能等价由我们无法控制的 harness 行为来判定] → 在 cross-transfer 文档的实验环境中固定 harness 版本；每一对的等价性 checklist 放在文档中，并在 harness 更新时重跑。
+- [对整个 10MB bucket 做翻译拉取可能威胁 1s p95] → 翻译对每个 commit 是确定的，因此按 (commit, target) 缓存翻译后的归档；负载测试的流量混合包含翻译拉取，以便抓住回归。
+- [并发协作突发下的 SQLite 写争用] → WAL 模式 + 短事务；记录规模上限；数据层保持可替换为 Postgres。
+- [Git worktree 大小 ≠ 用户对 10MB 的直觉（历史会超出工作树）] → 配额按工作树定义（规格）；定期跑 `git gc`，并写明历史开销不向用户计费。
+- [pi.dev 风格「照抄」带来复制风险] → 复现稀疏页头、白底和内容优先的字体，不复现 pi.dev 的素材或文案。
+- [GitHub 风格仓库页「照抄」带来同样的复制风险] → 复现信息结构、URL 形状、文件表密度和安静边框；不要引入 Primer CSS、octicons 或 GitHub 品牌。主操作是红色 Install，不是绿色 Code。
 
-## Migration Plan
+## 迁移计划
 
-Greenfield deploy; no migration. Rollback = redeploy previous build; SQLite file and git storage root are both backward-compatible artifacts to back up before upgrades.
+全新部署；没有迁移。回滚 = 重新部署上一份构建；SQLite 文件和 git 存储根都是升级前应备份的向后兼容产物。
 
-## Open Questions
+## 未决问题
 
-- Domain name is undecided (ADR leaves it open) — does not affect specs; install scripts must template the base URL.
-- Which harness versions to pin for Phase-1 equivalence experiments (record in each cross-transfer doc when first run).
+- 域名未定（ADR 留空）——不影响规格；安装脚本必须把基础 URL 做成模板。
+- Phase 1 等价性实验要固定哪些 harness 版本（首次运行时记入各 cross-transfer 文档）。
