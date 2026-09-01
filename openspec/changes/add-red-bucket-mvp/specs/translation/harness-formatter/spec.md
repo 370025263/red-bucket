@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 The formatter is red-bucket's core value: at fetch time it converts assets stored in one harness's format into the format of the requesting harness, preserving functional behavior, with per-pair rules documented and experimentally verified.

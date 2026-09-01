@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines the lightweight web frontend (pi.dev-style visual language with red-bucket copy): browse and search public buckets, manage one's own buckets, and surface the one-click install script.

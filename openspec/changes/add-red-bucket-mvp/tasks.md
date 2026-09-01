@@ -1,3 +1,5 @@
+> Chinese translation: `tasks.zh.md`
+
 # Tasks: add-red-bucket-mvp
 
 ## 1. Project skeleton and storage foundation

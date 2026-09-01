@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines GitHub-like collaboration on public buckets — issues and pull requests — plus the ability to install assets from another user's public bucket into one's own bucket.

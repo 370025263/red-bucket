@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines the RESTful API surface conventions: full-lifecycle coverage of every platform operation, a uniform error model, versioning, and the latency service objective the platform is accepted against.

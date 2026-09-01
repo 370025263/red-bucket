@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines how assets (skills, MCP tool configs, CLAUDE.md/AGENTS.md instruction files, subagents, plugins) are uploaded into a bucket with per-type format validation, listed, and downloaded in their stored form.

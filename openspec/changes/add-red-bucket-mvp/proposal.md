@@ -1,3 +1,5 @@
+> Chinese translation: `proposal.zh.md`
+
 # Proposal: add-red-bucket-mvp
 
 ## Why

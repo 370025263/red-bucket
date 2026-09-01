@@ -1,3 +1,5 @@
+> Chinese translation: `design.zh.md`
+
 # Design: add-red-bucket-mvp
 
 ## Context

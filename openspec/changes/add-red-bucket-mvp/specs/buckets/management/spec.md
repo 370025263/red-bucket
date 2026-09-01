@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines the bucket (repo) lifecycle: namespaced creation under `user/bucket-name`, public/private visibility, optional harness-style directory templates, and per-user quota limits.

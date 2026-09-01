@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines user registration, authentication, and the anonymous-read boundary: writes always require an authenticated account, while public content is readable without one.

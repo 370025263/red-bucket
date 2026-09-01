@@ -1,6 +1,6 @@
 # Test Plan: add-red-bucket-mvp
 
-本文件定义 Phase 1 的测试 suite 与验收条件。行为契约以 `specs/**/spec.md` 中的 Scenario 为准：每条 Scenario 都是一个必须自动化（或明确标注为人工实验）的用例，本文负责组织成 suite、补充测试数据与判定口径，并给出发布验收清单。
+本文件定义 Phase 1 的测试 suite 与验收条件。行为契约以 `specs/**/spec.md` 中的 Scenario 为准（中文译本为同目录 `spec.zh.md`）：每条 Scenario 都是一个必须自动化（或明确标注为人工实验）的用例，本文负责组织成 suite、补充测试数据与判定口径，并给出发布验收清单。
 
 ## 测试层次
 

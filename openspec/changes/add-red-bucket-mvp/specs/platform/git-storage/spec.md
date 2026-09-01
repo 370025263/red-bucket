@@ -1,3 +1,5 @@
+> Chinese translation: `spec.zh.md`
+
 ## Purpose
 
 Defines the storage contract: every bucket is a git repository on the server filesystem (no object storage), namespaced and isolated per user id, with quota accounting and inspectable history.
