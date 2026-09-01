@@ -15,7 +15,7 @@ AI agent 资产（skills、MCP 工具配置、CLAUDE.md/AGENTS.md、subagents、
 - 引入公开 bucket 上的社区协作：issues 和 pull requests；把其他用户 bucket 中的资产安装到自己的 bucket。
 - 引入覆盖上述全部操作的全生命周期 RESTful API，并带有 p95 延迟服务目标。
 - 引入文件系统上的 git 存储，每个 bucket 一个 git 仓库，按 user id 隔离，并强制执行配额。
-- 引入轻量 Web UI（pi.dev 风格），用于浏览、bucket 管理，以及安装脚本入口。
+- 引入轻量 Web UI（pi.dev 风格全局框、GitHub 风格仓库页、红色 bucket logo），用于浏览、bucket 管理，以及安装脚本入口。
 
 明确不在 Phase 1 范围内（延后，以后再说）：
 
@@ -34,7 +34,7 @@ AI agent 资产（skills、MCP 工具配置、CLAUDE.md/AGENTS.md、subagents、
 - `community/collaboration`：公开 bucket 上的 issues、pull requests，以及跨 bucket 资产安装。
 - `platform/rest-api`：RESTful API 约定、全生命周期覆盖、错误模型，以及延迟服务目标。
 - `platform/git-storage`：以 git 为后端的文件系统存储布局、按用户隔离、配额强制执行、历史耐久性。
-- `platform/web-ui`：轻量前端页面，以及一键安装脚本入口。
+- `platform/web-ui`：轻量前端页面、GitHub 风格的 bucket 详情页、红色 bucket 标识，以及一键安装脚本入口。
 
 ### 修改的能力
 

@@ -15,7 +15,7 @@ AI agent assets (skills, MCP tool configs, CLAUDE.md/AGENTS.md, subagents, plugi
 - Introduce community collaboration on public buckets: issues and pull requests; installing assets from other users' buckets into one's own.
 - Introduce a full-lifecycle RESTful API covering all above operations, with a p95 latency service objective.
 - Introduce git-on-filesystem storage, one git repo per bucket, isolated per user id, with quota enforcement.
-- Introduce a lightweight web UI (pi.dev-style) for browsing, bucket management, and install-script entry points.
+- Introduce a lightweight web UI (pi.dev global chrome, GitHub-like repository page, red bucket logo) for browsing, bucket management, and install-script entry points.
 
 Explicitly out of scope for Phase 1 (deferred, 以后再说):
 
@@ -34,7 +34,7 @@ Explicitly out of scope for Phase 1 (deferred, 以后再说):
 - `community/collaboration`: issues, pull requests on public buckets, and cross-bucket asset install.
 - `platform/rest-api`: RESTful API conventions, full lifecycle coverage, error model, and latency service objective.
 - `platform/git-storage`: git-backed filesystem storage layout, per-user isolation, quota enforcement, durability of history.
-- `platform/web-ui`: lightweight frontend pages and one-click install-script entry point.
+- `platform/web-ui`: lightweight frontend pages, GitHub-like bucket detail page, red bucket mark, and one-click install-script entry point.
 
 ### Modified Capabilities
 

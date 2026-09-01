@@ -39,7 +39,8 @@
 
 ### S2 Bucket 生命周期（spec: buckets/management）
 
-1. 建 bucket 成功：201，元数据齐全，出现在 owner 的 bucket 列表。
+1. 建 bucket 成功：201，元数据齐全（含 description，默认空），出现在 owner 的 bucket 列表。
+1a. 创建或 PATCH description（≤350 字）后元数据与详情页 About 可见；超长 → 422 点名 `description`。
 2. 同名（大小写）重复 → 409。
 3. 非法名（含 `/`、空格、大写各一例）→ 422。
 4. 第 6 个 bucket → 403 `bucket_quota_exceeded`，错误体含当前限额；删 1 个后再建成功。
@@ -82,12 +83,17 @@
 
 ### S6 UI 与安装脚本（spec: platform/web-ui, platform/rest-api）
 
-1. 匿名打开公开 bucket 页：资产列表 + 可复制安装脚本可见，无登录墙。
-2. 私有 bucket 页与不存在 bucket 页渲染一致。
-3. 禁用 JavaScript 加载公开 bucket 页：HTML 中含资产列表与脚本文本。
+1. 匿名打开公开 bucket 页：站点头含红色 bucket SVG 与 `red-bucket` 字标、标题 `username / bucket-name`、Public 标识、Code/Issues/PRs 页签、文件表、About、可复制安装脚本可见，Install 为品牌红而非 GitHub 绿，无登录墙，无 Settings、Star、Watch、Fork。
+2. 私有 bucket 页与不存在 bucket 页渲染一致；非 owner 打开 `/settings` 同样是未找到页。
+3. 禁用 JavaScript 加载公开 bucket 页：HTML 中含标题、页签、文件表、About 与脚本文本。
 4. 登录后 UI 建 bucket（agents template + public）→ 跳转新 bucket 页，骨架与 public 标识正确。
 5. UI 操作期间网络日志仅访问 `/api/v1/`。
 6. 安装脚本端到端：干净容器内执行 target=claude 的脚本 → 下载翻译内容、落位 claude 本地布局、退出码 0。
+7. Code 页：根目录文件表按一层列出目录与文件，含最近 commit 条；进入 `/tree/<path>` 只列该目录子项；文件打开 `/blob/<path>`。
+8. 根目录有 `README.md` 与 description 时，README 在文件表下方渲染，About 含 description、可见性、用量、10MB 上限、harness mix。
+9. 空 bucket：文件表无内容行；owner 看到添加 README 与上传提示。
+10. Issues 页签列出一条 open issue（编号、标题、状态、作者、时间）并链到 `/issues/<n>`；页签上的 open 计数正确。
+11. Owner 可见 Settings 页签，可改 description 与可见性。
 
 ### S7 存储安全与配额（spec: platform/git-storage）
 

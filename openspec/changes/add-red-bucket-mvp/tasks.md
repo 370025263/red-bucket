@@ -18,7 +18,7 @@
 
 ## 3. Buckets and assets
 
-- [ ] 3.1 Bucket CRUD endpoints: create with visibility + name rules, list, metadata (usage/limit), visibility PATCH, delete
+- [ ] 3.1 Bucket CRUD endpoints: create with visibility + optional description + name rules, list, metadata (usage/limit/description), visibility and description PATCH, delete
 - [ ] 3.2 Bucket-count quota enforcement (per-user configurable limit, default 5) with `bucket_quota_exceeded` error
 - [ ] 3.3 Template catalog endpoint and template initialization for `codex`, `agents`, `claude`, `openclaw` skeletons
 - [ ] 3.4 Asset validation pipeline: per-type validators (skill, mcp, instructions, subagent, plugin) emitting rule-id violations
@@ -45,14 +45,15 @@
 
 ## 6. Web UI
 
-- [ ] 6.1 Server-rendered public pages: landing, user profile, bucket detail with install-script snippet and harness selector; JS-free read path
-- [ ] 6.2 Authenticated pages: register/login, bucket create (template + visibility), upload, visibility toggle, quota display, delete, issues/PR management — all via `/api/v1/` only
+- [ ] 6.1 Server-rendered public pages: landing, user profile, GitHub-like bucket detail (header, tabs, Code-tab file table, About, README, install snippet); JS-free read path; site header with red bucket SVG + `red-bucket` wordmark; named color tokens from design.md
+- [ ] 6.2 Authenticated pages: register/login, bucket create (template + visibility + optional description), upload from Code tab, Settings (visibility, description, quota, delete), issues/PR tabs — all via `/api/v1/` only
 - [ ] 6.3 Per-bucket install-script endpoint that fetches translated bucket content and places files into the target harness layout
-- [ ] 6.4 Test suite S6 (UI + install script) green
+- [ ] 6.4 Implement Code-tab routes `tree`/`blob`/`commits`/`commit`, Issues and Pulls list and detail routes, and owner-only Settings route with 404 for non-owners
+- [ ] 6.5 Test suite S6 (UI + install script) green
 
 ## 7. Acceptance and release gate
 
 - [ ] 7.1 Mock-data seeder: 1000 users with representative buckets/assets
 - [ ] 7.2 Load-test scenario (10 concurrent clients, read-heavy mix incl. translated fetch, >=5 min) producing per-endpoint-class p95 report; wire into pre-release gate failing on p95 >= 1s
 - [ ] 7.3 Cross-harness migration acceptance run: benchmark assets migrated per pair, equivalence checklist executed, results archived (suite S8)
-- [ ] 7.4 Full test plan (test-plan.md) executed; archive reports; update ADR `sdd/adr/platform.md` 验收测试 section to point at the spec scenarios and test plan
+- [ ] 7.4 Full test plan (test-plan.md) executed; archive reports; update the living ADR `sdd/adr/platform.md` 验收测试 section to point at the spec scenarios and test plan. Do not edit `sdd/adr/platform.original.md`.

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the bucket (repo) lifecycle: namespaced creation under `user/bucket-name`, public/private visibility, optional harness-style directory templates, and per-user quota limits.
+Defines the bucket (repo) lifecycle: namespaced creation under `user/bucket-name`, public/private visibility, optional description, optional harness-style directory templates, and per-user quota limits.
 
 ## ADDED Requirements
 
@@ -11,7 +11,7 @@ The system SHALL let an authenticated user create a bucket addressed as `<userna
 
 #### Scenario: Successful bucket creation
 - **WHEN** an authenticated user creates a bucket with an unused valid name and visibility `public`
-- **THEN** the system returns HTTP 201 with the bucket metadata (full name, visibility, quota, created time) and the bucket is immediately visible at `GET /users/<username>/buckets`
+- **THEN** the system returns HTTP 201 with the bucket metadata (full name, visibility, description, quota, created time) and the bucket is immediately visible at `GET /users/<username>/buckets`
 
 #### Scenario: Duplicate bucket name rejected
 - **WHEN** a user creates a bucket whose name (case-insensitive) already exists under their namespace
@@ -31,6 +31,17 @@ The system SHALL limit each user to 5 buckets by default. The limit MUST be enfo
 #### Scenario: Deletion frees quota
 - **WHEN** a user at the 5-bucket limit deletes one bucket and then creates a new one
 - **THEN** the creation succeeds
+
+### Requirement: Bucket description
+The system SHALL store an optional owner-editable plain-text description on each bucket, at most 350 characters (the GitHub About description limit). The description MUST default to empty, MUST be returned on bucket metadata, and MUST be patchable by the owner after creation.
+
+#### Scenario: Description set and returned
+- **WHEN** an owner creates a bucket with a description, or later PATCHes the description
+- **THEN** subsequent metadata responses and the bucket detail About sidebar show that description
+
+#### Scenario: Description too long rejected
+- **WHEN** a description longer than 350 characters is submitted
+- **THEN** the system responds HTTP 422 naming the `description` field
 
 ### Requirement: Visibility change
 The system SHALL allow the bucket owner to switch a bucket between `public` and `private` at any time. The change MUST take effect for all subsequent requests.

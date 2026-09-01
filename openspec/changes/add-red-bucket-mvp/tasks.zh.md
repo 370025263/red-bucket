@@ -18,7 +18,7 @@
 
 ## 3. Buckets 与资产
 
-- [ ] 3.1 Bucket CRUD 端点：创建时带可见性 + 名称规则，列表，元数据（usage/limit），可见性 PATCH，删除
+- [ ] 3.1 Bucket CRUD 端点：创建时带可见性 + 可选 description + 名称规则，列表，元数据（usage/limit/description），可见性与 description PATCH，删除
 - [ ] 3.2 Bucket 数量配额强制执行（每用户可配置上限，默认 5），错误为 `bucket_quota_exceeded`
 - [ ] 3.3 模板目录端点，以及 `codex`、`agents`、`claude`、`openclaw` 骨架的模板初始化
 - [ ] 3.4 资产校验流水线：按类型的校验器（skill、mcp、instructions、subagent、plugin），产出 rule-id 违规项
@@ -45,14 +45,15 @@
 
 ## 6. Web UI
 
-- [ ] 6.1 服务端渲染的公开页面：落地页、用户资料、带安装脚本片段和 harness 选择器的 bucket 详情；无 JS 的只读路径
-- [ ] 6.2 已认证页面：注册/登录、建 bucket（模板 + 可见性）、上传、可见性切换、配额展示、删除、issues/PR 管理——全部只走 `/api/v1/`
+- [ ] 6.1 服务端渲染的公开页面：落地页、用户资料、GitHub 风格的 bucket 详情（标题、页签、Code 页签文件表、About、README、安装片段）；无 JS 的只读路径；站点头带红色 bucket SVG + `red-bucket` 字标；使用 design.md 里的命名颜色 tokens
+- [ ] 6.2 已认证页面：注册/登录、建 bucket（模板 + 可见性 + 可选 description）、从 Code 页签上传、Settings（可见性、description、配额、删除）、issues/PR 页签——全部只走 `/api/v1/`
 - [ ] 6.3 每 bucket 的安装脚本端点，拉取翻译后的 bucket 内容并把文件放到目标 harness 布局中
-- [ ] 6.4 测试套件 S6（UI + 安装脚本）全绿
+- [ ] 6.4 实现 Code 页签路由 `tree`/`blob`/`commits`/`commit`、Issues 与 Pulls 的列表和详情路由，以及仅 owner 的 Settings 路由（非 owner 为 404）
+- [ ] 6.5 测试套件 S6（UI + 安装脚本）全绿
 
 ## 7. 验收与发布门禁
 
 - [ ] 7.1 Mock 数据 seeder：1000 个用户，带有代表性的 buckets/assets
 - [ ] 7.2 负载测试场景（10 个并发客户端，读为主的混合流量，含翻译拉取，>=5 分钟），产出按端点类的 p95 报告；接入预发布门禁，在 p95 >= 1s 时失败
 - [ ] 7.3 跨 harness 迁移验收运行：按每对迁移基准资产，执行等价性 checklist，结果归档（suite S8）
-- [ ] 7.4 执行完整测试计划（test-plan.md）；归档报告；更新 ADR `sdd/adr/platform.md` 的验收测试一节，指向 spec scenarios 与测试计划
+- [ ] 7.4 执行完整测试计划（test-plan.md）；归档报告；更新活文档 ADR `sdd/adr/platform.md` 的验收测试一节，指向 spec scenarios 与测试计划。不要改 `sdd/adr/platform.original.md`。

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-定义 bucket（repo）生命周期：在 `user/bucket-name` 下的命名空间创建、public/private 可见性、可选的 harness 风格目录模板，以及每用户配额上限。
+定义 bucket（repo）生命周期：在 `user/bucket-name` 下的命名空间创建、public/private 可见性、可选 description、可选的 harness 风格目录模板，以及每用户配额上限。
 
 ## ADDED Requirements
 
@@ -11,7 +11,7 @@
 
 #### Scenario: Successful bucket creation
 - **WHEN** 已认证用户用一个未使用的合法名称和可见性 `public` 创建 bucket
-- **THEN** 系统以 HTTP 201 返回 bucket 元数据（全名、可见性、配额、创建时间），并且该 bucket 立即在 `GET /users/<username>/buckets` 可见
+- **THEN** 系统以 HTTP 201 返回 bucket 元数据（全名、可见性、description、配额、创建时间），并且该 bucket 立即在 `GET /users/<username>/buckets` 可见
 
 #### Scenario: Duplicate bucket name rejected
 - **WHEN** 用户创建一个名称（大小写不敏感）在其命名空间下已经存在的 bucket
@@ -31,6 +31,17 @@
 #### Scenario: Deletion frees quota
 - **WHEN** 一名处于 5-bucket 上限的用户删除一个 bucket，然后再创建一个新的
 - **THEN** 该创建成功
+
+### Requirement: Bucket description
+系统必须为每个 bucket 存储一段可选的、由 owner 可编辑的纯文本 description，最多 350 个字符（GitHub About description 上限）。description 必须默认为空，必须在 bucket 元数据中返回，并且必须可由 owner 在创建后 PATCH。
+
+#### Scenario: Description set and returned
+- **WHEN** owner 在创建 bucket 时带上一段 description，或之后 PATCH 该 description
+- **THEN** 随后的元数据响应和 bucket 详情 About 侧栏显示该 description
+
+#### Scenario: Description too long rejected
+- **WHEN** 提交一段长于 350 个字符的 description
+- **THEN** 系统响应 HTTP 422，并点名 `description` 字段
 
 ### Requirement: Visibility change
 系统必须允许 bucket owner 随时在 `public` 与 `private` 之间切换 bucket。该变更必须对之后的全部请求生效。
