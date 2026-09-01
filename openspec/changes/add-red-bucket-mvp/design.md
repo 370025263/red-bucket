@@ -54,6 +54,12 @@
 11. 实现栈以 `tech-stack.md` 为准：Python 3.12、FastAPI、Jinja2、uvicorn、标准库 sqlite3 薄 DAL、系统 git 子进程、Argon2id、pytest、Locust、uv、ruff。
     用户怎么走完注册、建桶、上传、翻译拉取、安装脚本、copy、issue、PR，以 `user-flows.md` 的时序为准。换语言或框架必须先改选型文档。备选里最强的是 Go，本期不用。
 
+12. 用户侧入口是本仓库里的 skill，不是第二个 API。
+    `npx skills add 370025263/red-bucket --skill red-bucket` 装 agent 技能。一句话经 server 安装资产走 `GET .../install-script`。设计见 `client-skill.md`。仓库 MIT 开源。README 与 SKILL.md 由 Gemini Flash 撰写。
+
+13. 代码分析门禁对齐 SkillNerds/xskill。
+    `make lint`：semgrep（p/default、p/python、p/ai-best-practices、`.semgrep/xskill.yml`）、ruff（xskill 那组再加 PEP8 的 E 与 W，行宽 79）、pylint `invalid-name` 与同一套命名正则、vulture。规则选择走 Makefile 命令行，不写进 pyproject。先门禁绿再写业务。
+
 ## Bucket 详情页（GitHub 对照）
 
 默认 URL：`/<username>/<bucket-name>`（Code 页签，工作树根）。子路由遵循 GitHub 的仓库 URL 形状，以便熟悉 GitHub 的用户能够猜到：

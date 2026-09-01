@@ -1,0 +1,129 @@
+# 从 SkillNerds/xskill `.semgrep/xskill.yml` 原样迁入（2026-09 主干）。
+# 只改路径：生产代码在 src/（包名 redbucket），windowless 豁免改为
+# src/redbucket/utils/proc.py。规则 id 与语义保持不变，便于对照上游。
+# 跑法：make lint
+rules:
+  - id: xskill-no-time-sleep
+    languages: [python]
+    severity: ERROR
+    message: >
+      生产代码禁止 time.sleep：限速用限流器，等待用
+      Event.wait / 条件变量。
+      No time.sleep in production code.
+    paths:
+      include: [src]
+    pattern-either:
+      - pattern: time.sleep(...)
+      - patterns:
+          - pattern: sleep(...)
+          - pattern-inside: |
+              from time import sleep
+              ...
+
+  - id: xskill-no-lambda
+    languages: [python]
+    severity: ERROR
+    message: >
+      禁止 lambda：sort/min/max 的 key 用 operator.itemgetter/attrgetter，
+      回调用已有函数或方法引用。No lambda expressions.
+    paths:
+      include: [src]
+    pattern: 'lambda $...ARGS: $BODY'
+
+  - id: xskill-no-private-import
+    languages: [python]
+    severity: ERROR
+    message: >
+      禁止从别的模块导入 private 名字（_foo）：要么把它升为 public API，
+      要么在本模块内实现。No importing another module's private names.
+    paths:
+      include: [src]
+    patterns:
+      - pattern: from $MODULE import $NAME
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: '^_[^_].*'
+
+  - id: xskill-no-os-system
+    languages: [python]
+    severity: ERROR
+    message: >
+      禁止 os.system / os.popen：Windows 上会弹黑窗且无法静默。改用
+      subprocess.run(..., **windowless_subprocess_kwargs())。
+    paths:
+      include: [src]
+    pattern-either:
+      - pattern: os.system(...)
+      - pattern: os.popen(...)
+
+  - id: xskill-subprocess-must-be-windowless
+    languages: [python]
+    severity: ERROR
+    message: >
+      subprocess 调用必须带 **windowless_subprocess_kwargs()（utils/proc），
+      否则 Windows 上弹黑窗。Every subprocess call must be windowless on Windows.
+    paths:
+      include: [src]
+      exclude: [src/redbucket/utils/proc.py]
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run(...)
+          - pattern: subprocess.Popen(...)
+          - pattern: subprocess.check_output(...)
+          - pattern: subprocess.check_call(...)
+          - pattern: subprocess.call(...)
+      - pattern-not: subprocess.run(..., **windowless_subprocess_kwargs(...), ...)
+      - pattern-not: subprocess.Popen(..., **windowless_subprocess_kwargs(...), ...)
+      - pattern-not: subprocess.check_output(..., **windowless_subprocess_kwargs(...), ...)
+      - pattern-not: subprocess.check_call(..., **windowless_subprocess_kwargs(...), ...)
+      - pattern-not: subprocess.call(..., **windowless_subprocess_kwargs(...), ...)
+
+  - id: xskill-decode-needs-errors
+    languages: [python]
+    severity: ERROR
+    message: >
+      .decode() 必须显式传 errors=（如 errors="replace"）或按平台编码解码：
+      Windows 子进程/工具输出是 GBK(cp936)，硬按 UTF-8 解会
+      UnicodeDecodeError。Decode GBK-safe, never assume UTF-8.
+    paths:
+      include: [src]
+    patterns:
+      - pattern: $X.decode(...)
+      - pattern-not: $X.decode(..., errors=$ERR)
+      - pattern-not: $X.decode($ENC, $ERR)
+
+  - id: xskill-subprocess-text-needs-encoding
+    languages: [python]
+    severity: ERROR
+    message: >
+      subprocess 带 text=True/universal_newlines=True 时必须同时给
+      encoding= 或 errors=（如 errors="replace"）：Windows 子进程输出是
+      GBK，隐式解码会 UnicodeDecodeError 打挂调用线程。
+    paths:
+      include: [src]
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.$FUNC(..., text=True, ...)
+          - pattern: subprocess.$FUNC(..., universal_newlines=True, ...)
+      - pattern-not: subprocess.$FUNC(..., encoding=$ENC, ...)
+      - pattern-not: subprocess.$FUNC(..., errors=$ERR, ...)
+
+  - id: xskill-no-embedding-in-loop
+    languages: [python]
+    severity: ERROR
+    message: >
+      禁止循环内逐条调 embedding：组批（batch）一次请求发一批。仅当后端
+      确认不支持数组输入时才允许逐条，并在该行加 nosemgrep 注明原因。
+    paths:
+      include: [src]
+    patterns:
+      - pattern-either:
+          - pattern: $CLIENT.embeddings.create(...)
+          - pattern: $CLIENT.embed(...)
+      - pattern-either:
+          - pattern-inside: |
+              for $ITEM in $ITER:
+                ...
+          - pattern-inside: |
+              while $COND:
+                ...

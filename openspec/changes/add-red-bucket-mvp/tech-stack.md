@@ -64,7 +64,7 @@ FastAPI 路由可以是 async。凡碰到 SQLite 写、flock、`git` 子进程�
 | 单元与 API 测试 | pytest + httpx ASGI 客户端 | 只测 mock 不启应用 |
 | 负载门禁 | Locust | 本期不双轨；k6 留作以后若 CI 镜像更适合再换，场景文件另写 |
 | 包管理与锁 | uv（`pyproject.toml` + `uv.lock`） | 散装 pip freeze |
-| Lint 与格式 | ruff | 再叠一层 black 或 flake8 |
+| Lint 与格式 | 对齐 SkillNerds/xskill 的 `make lint`：semgrep + ruff + pylint 命名 + vulture；ruff 额外开启 E,W（PEP8），行宽 79 | 另写一套 pylint 全开、black、flake8 |
 | CSS | 手写一份，只用 `design.md` 的 `--rb-*` tokens | Primer、Bootstrap、Tailwind 作为运行时依赖 |
 
 Token 过期、429、CSRF、HTTPS 终止仍按 design.md 留给部署层。HTML 表单写操作若走 cookie 会话，本期仍只认 Bearer：浏览器管理页用页面内持有的 token 调同一套 `/api/v1/`（可用极薄的渐进增强）。不要为 UI 做第二套 session cookie 认证协议。

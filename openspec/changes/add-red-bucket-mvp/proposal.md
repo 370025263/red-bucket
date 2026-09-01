@@ -17,6 +17,8 @@ AI agent 资产（skills、MCP 工具配置、CLAUDE.md/AGENTS.md、subagents、
 - 引入轻量 Web UI（pi.dev 风格全局框、GitHub 风格仓库页、红色 bucket logo），用于浏览、bucket 管理，以及安装脚本入口。UI 只消费同一套 `/api/v1/`。
 - 确立 Phase 1 技术选型（`tech-stack.md`）：Python 3.12、FastAPI、Jinja2、SQLite 薄 DAL、系统 git、Argon2id、pytest、Locust。
 - 画出用户时序（`user-flows.md`）：注册登录、建桶、上传、翻译拉取、安装脚本、跨桶 copy、issue、PR、登出、私有桶 404。
+- 引入用户侧 skill 入口（`client-skill.md`）：本仓库 `skills/red-bucket/` 供 `npx skills add`；资产落盘仍走服务端 install-script 一句话。仓库 MIT 开源。
+- 代码门禁对齐 SkillNerds/xskill：semgrep 自定义规则、ruff（含 PEP8 E/W）、pylint 命名、vulture。先有 lint 再写业务。
 
 明确不在 Phase 1 范围内（延后，以后再说）：
 

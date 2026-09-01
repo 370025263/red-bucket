@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "red-bucket"
+version = "0.0.0"
+description = "Hub for AI agent assets with fetch-time cross-harness format translation"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "370025263", email = "370025263@qq.com" }]
+keywords = ["agent", "skill", "harness", "translation", "mcp"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.8",
+    "pylint>=3",
+    "vulture>=2.14",
+]
+# semgrep 走 PATH 上的可执行文件（与 xskill Makefile 一致），不进 wheel。
+# 本机 glibc 2.32 装不了新版 manylinux_2_34 的 semgrep wheel。CI（ubuntu-latest）在 workflow 里单独 pip install semgrep。
+
+[project.urls]
+Homepage = "https://github.com/370025263/red-bucket"
+Repository = "https://github.com/370025263/red-bucket"
+Issues = "https://github.com/370025263/red-bucket/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+# ruff / pylint 的规则选择与命名正则全部走 Makefile 命令行 flag，
+# 与 SkillNerds/xskill 一致，不在此文件里再写一套以免分叉。

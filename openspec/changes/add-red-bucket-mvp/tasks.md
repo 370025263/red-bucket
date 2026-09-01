@@ -4,7 +4,9 @@
 
 ## 1. 项目骨架与存储基础
 
-- [ ] 1.1 按 `tech-stack.md` 搭起服务骨架：Python 3.12、uv、FastAPI + Jinja2 + uvicorn、ruff、pytest、单一可部署物、README、CI；目录按选型文档的 `src/redbucket/` 划分
+- [ ] 1.0 `make lint` 与 `make test` 在空业务树上全绿（semgrep / ruff PEP8 / pylint 命名 / vulture）；CI 跑同一条。未绿之前不写业务代码
+- [ ] 1.1 按 `tech-stack.md` 搭起服务骨架：Python 3.12、uv、FastAPI + Jinja2 + uvicorn、pytest、单一可部署物、README、CI；目录按选型文档的 `src/redbucket/` 划分
+- [ ] 1.6 按 `client-skill.md` 维护 `skills/red-bucket/`，保证 `npx skills add 370025263/red-bucket --list` 能发现；不另开客户端 API
 - [ ] 1.2 按 `schema-sqlite.md` 实现 SQLite 元数据层（九张表、WAL、`foreign_keys=ON`、活桶谓词、字段映射），放在薄数据访问模块后面
 - [ ] 1.3 实现 git 存储层：每个 bucket 一个裸仓库，位于 `<root>/<user-id>/<bucket-id>.git`，每 bucket 变更锁，每次内容变更一次 commit，作者邮箱 `user-{id}@users.red-bucket.invalid`，成功后按工作树刷新 `storage_usage_bytes`
 - [ ] 1.4 实现路径清洗（拒绝 `..`、绝对路径、`.git/`、指向树外的符号链接），并用 test-plan suite S7 的单元测试覆盖
