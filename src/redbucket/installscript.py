@@ -83,7 +83,10 @@ function unpack(buf) {{
 }}
 
 const resp = await fetch(BASE + PATH, {{
-  headers: {{ accept: 'application/zip' }},
+  headers: {{
+    accept: 'application/zip',
+    'user-agent': 'red-bucket-install/1 node/' + process.versions.node,
+  }},
 }})
 if (!resp.ok) {{
   process.stderr.write('red-bucket: HTTP ' + resp.status + '\\n')

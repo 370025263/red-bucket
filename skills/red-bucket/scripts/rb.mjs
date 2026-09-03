@@ -7,6 +7,10 @@ import { homedir } from 'node:os'
 import { inflateRawSync } from 'node:zlib'
 import process from 'node:process'
 
+// 每次改这份文件都把版本号抬一下。服务器按 User-Agent 就能看出线上
+// 还有多少老副本；npx skills 自己只认 git 哈希，不认这个数。
+const CLIENT_VERSION = '0.2.0'
+const USER_AGENT = `red-bucket-client/${CLIENT_VERSION} node/${process.versions.node}`
 const DEFAULT_ORIGIN = 'https://redbucket.store'
 const DEFAULT_PORTS = { 'http:': '80', 'https:': '443' }
 // harness 列表故意不写死在这里。服务器随时会加新的（比如 cursor），
@@ -74,7 +78,7 @@ function tokenFor(origin) {
 }
 
 async function call(origin, method, path, { body, token, accept } = {}) {
-  const headers = {}
+  const headers = { 'user-agent': USER_AGENT }
   if (body !== undefined) headers['content-type'] = 'application/json'
   if (token) headers.authorization = `Bearer ${token}`
   if (accept) headers.accept = accept
@@ -381,6 +385,7 @@ const USAGE = `red-bucket client (Node only)
   node rb.mjs login   [--origin URL] [--client NAME]
   node rb.mjs logout  [--origin URL]
   node rb.mjs status  [--origin URL]
+  node rb.mjs version
   node rb.mjs install <user>/<bucket> --target <harness> [--dest DIR] [--origin URL]
   node rb.mjs create  <user>/<bucket> [--visibility private|public] [--description TEXT] [--template NAME]
   node rb.mjs upload  <user>/<bucket> <local-dir> --type <asset type> --harness <written-for> [--path bucket/path]
@@ -404,6 +409,10 @@ async function main(argv) {
   const command = loose[0]
   if (!command || command === 'help' || flags.help !== undefined) {
     process.stdout.write(USAGE)
+    return 0
+  }
+  if (command === 'version') {
+    process.stdout.write(`${USER_AGENT}\n`)
     return 0
   }
   const origin = normOrigin(flags.origin || process.env.RED_BUCKET_URL || DEFAULT_ORIGIN)
