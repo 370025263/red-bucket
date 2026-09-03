@@ -61,6 +61,14 @@ node <skill-dir>/scripts/rb.mjs create  alice/tools --visibility private --descr
 node <skill-dir>/scripts/rb.mjs upload  alice/tools ./my-skill --type skill --harness claude --path skills/my-skill
 ```
 
+`login` prints the link, then waits `--wait` seconds (default 20) for
+the browser. If your shell tool has a timeout, that is fine: on timeout
+it exits 0, keeps the pending code in `pending.json` next to the auth
+file, and says so. Tell the user to approve, then run `login` or
+`status` again; the token is collected and saved then. No second code is
+issued while the first is still valid, so never "retry" by killing the
+process and starting over.
+
 `install` writes into the current directory; `--dest DIR` or
 `$RED_BUCKET_DEST` puts it elsewhere. `--origin URL` or `$RED_BUCKET_URL`
 points at a self-hosted server. Private buckets work once you are signed
