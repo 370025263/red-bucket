@@ -9,7 +9,7 @@ import process from 'node:process'
 
 // 每次改这份文件都把版本号抬一下。服务器按 User-Agent 就能看出线上
 // 还有多少老副本；npx skills 自己只认 git 哈希，不认这个数。
-const CLIENT_VERSION = '0.2.0'
+const CLIENT_VERSION = '0.3.0'
 const USER_AGENT = `red-bucket-client/${CLIENT_VERSION} node/${process.versions.node}`
 const DEFAULT_ORIGIN = 'https://redbucket.store'
 const DEFAULT_PORTS = { 'http:': '80', 'https:': '443' }
