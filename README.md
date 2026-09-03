@@ -12,6 +12,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-red.svg" alt="License: MIT" /></a>
   <a href="pyproject.toml"><img src="https://img.shields.io/badge/Python-3.12-blue.svg" alt="Python 3.12" /></a>
   <a href="Makefile"><img src="https://img.shields.io/badge/Lint-make%20lint-brightgreen.svg" alt="Lint Gate" /></a>
+  <a href="https://linux.do"><img src="https://img.shields.io/badge/LINUX%20DO-社区-FFB003?style=flat-square" alt="LINUX DO" /></a>
 </p>
 
 ---
