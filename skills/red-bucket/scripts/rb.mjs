@@ -102,7 +102,91 @@ async function json(resp) {
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 
-async function login(origin, client) {
+// 一次 login 不一定等得到人点授权：agent 的 shell 常常 30 秒就超时。
+// 所以把进行中的 device_code 落在 pending.json，login 只等 --wait 秒；
+// 人点完之后再跑一次 login 或 status，接着上次的码把 token 领回来。
+function pendingPath() {
+  return join(dirname(authPath()), 'pending.json')
+}
+
+function readPending(origin) {
+  const path = pendingPath()
+  if (!existsSync(path)) return null
+  try {
+    const doc = JSON.parse(readFileSync(path, 'utf8'))
+    const item = doc && doc.hosts ? doc.hosts[origin] : null
+    if (!item || !item.device_code) return null
+    if (new Date(item.expires_at).getTime() <= Date.now()) return null
+    return item
+  } catch {
+    return null
+  }
+}
+
+function writePending(origin, item) {
+  const path = pendingPath()
+  let doc = { version: 1, hosts: {} }
+  try {
+    if (existsSync(path)) doc = JSON.parse(readFileSync(path, 'utf8'))
+  } catch {
+    doc = { version: 1, hosts: {} }
+  }
+  if (!doc.hosts) doc.hosts = {}
+  if (item) doc.hosts[origin] = item
+  else delete doc.hosts[origin]
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
+  const tmp = `${path}.${process.pid}.tmp`
+  writeFileSync(tmp, JSON.stringify(doc, null, 2) + '\n', { mode: 0o600 })
+  renameSync(tmp, path)
+}
+
+function saveToken(origin, state, client) {
+  const { doc, writable, reason } = readAuth()
+  if (!writable) throw new Fail(`${authPath()} is ${reason}; fix or move it, then run login again.`)
+  doc.hosts[origin] = {
+    username: state.user.username,
+    token: state.token,
+    created_at: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
+    client,
+  }
+  writeAuth(doc)
+}
+
+// 轮询一个进行中的码，最多 waitMs。返回 'approved' | 'waiting'；拒绝和过期直接抛。
+async function collect(origin, item, waitMs) {
+  const deadline = Math.min(Date.now() + waitMs, new Date(item.expires_at).getTime())
+  for (;;) {
+    const polled = await call(origin, 'POST', '/api/v1/auth/device/token', {
+      body: { device_code: item.device_code },
+    })
+    if (polled.status === 404) {
+      writePending(origin, null)
+      throw new Fail('that sign-in code expired or was already used. Run login again.')
+    }
+    const state = await json(polled)
+    if (state.status === 'denied') {
+      writePending(origin, null)
+      throw new Fail('sign-in was refused in the browser.')
+    }
+    if (state.status === 'approved') {
+      saveToken(origin, state, item.client)
+      writePending(origin, null)
+      return `Signed in as ${state.user.username}.`
+    }
+    if (Date.now() >= deadline) return null
+    await sleep(Math.min(item.interval * 1000, Math.max(0, deadline - Date.now())))
+  }
+}
+
+function stillWaiting(item) {
+  return (
+    `Not approved yet. The link is still valid until ${item.expires_at}:\n` +
+    `  ${item.url}\n` +
+    `Code ${item.user_code}. After approving in the browser, run login (or status) again to finish.`
+  )
+}
+
+async function login(origin, client, waitSeconds) {
   const existing = tokenFor(origin)
   if (existing.token && existing.source === 'authfile') {
     const check = await call(origin, 'GET', '/api/v1/users/me', { token: existing.token })
@@ -111,36 +195,28 @@ async function login(origin, client) {
       return `Already signed in as ${who.username}.`
     }
   }
-  const started = await call(origin, 'POST', '/api/v1/auth/device', { body: { client } })
-  if (started.status !== 201) throw new Fail(`could not start sign-in (HTTP ${started.status})`)
-  const grant = await json(started)
-  process.stdout.write(
-    `Open this in a browser to sign in or create an account:\n` +
-      `  ${grant.verification_url_complete}\n` +
-      `The page should show the code ${grant.user_code}. Waiting...\n`,
-  )
-  const deadline = Date.now() + grant.expires_in * 1000
-  while (Date.now() < deadline) {
-    await sleep(grant.interval * 1000)
-    const polled = await call(origin, 'POST', '/api/v1/auth/device/token', {
-      body: { device_code: grant.device_code },
-    })
-    if (polled.status === 404) throw new Fail('that sign-in code expired. Run login again.')
-    const state = await json(polled)
-    if (state.status === 'denied') throw new Fail('sign-in was refused in the browser.')
-    if (state.status !== 'approved') continue
-    const { doc, writable, reason } = readAuth()
-    if (!writable) throw new Fail(`${authPath()} is ${reason}; fix or move it, then run login again.`)
-    doc.hosts[origin] = {
-      username: state.user.username,
-      token: state.token,
-      created_at: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
+  let item = readPending(origin)
+  if (!item) {
+    const started = await call(origin, 'POST', '/api/v1/auth/device', { body: { client } })
+    if (started.status !== 201) throw new Fail(`could not start sign-in (HTTP ${started.status})`)
+    const grant = await json(started)
+    item = {
+      device_code: grant.device_code,
+      user_code: grant.user_code,
+      url: grant.verification_url_complete,
+      interval: grant.interval,
+      expires_at: new Date(Date.now() + grant.expires_in * 1000).toISOString().replace(/\.\d+Z$/, 'Z'),
       client,
     }
-    writeAuth(doc)
-    return `Signed in as ${state.user.username}.`
+    writePending(origin, item)
   }
-  throw new Fail('timed out waiting for browser approval.')
+  process.stdout.write(
+    `Open this in a browser to sign in or create an account:\n` +
+      `  ${item.url}\n` +
+      `The page should show the code ${item.user_code}. Waiting up to ${waitSeconds}s...\n`,
+  )
+  const done = await collect(origin, item, waitSeconds * 1000)
+  return done || stillWaiting(item)
 }
 
 async function logout(origin) {
@@ -157,6 +233,15 @@ async function logout(origin) {
 }
 
 async function status(origin) {
+  const held0 = tokenFor(origin)
+  if (!held0.token) {
+    const item = readPending(origin)
+    if (item) {
+      const done = await collect(origin, item, 0)
+      if (done) return done
+      return stillWaiting(item)
+    }
+  }
   const held = tokenFor(origin)
   if (held.source === 'unreadable') return `${authPath()} will not parse. Treating you as signed out.`
   if (held.source === 'unknown-version') return `${authPath()} is a format I do not know. Treating you as signed out.`
@@ -371,8 +456,14 @@ function readFlags(argv) {
   const loose = []
   for (let at = 0; at < argv.length; at += 1) {
     if (argv[at].startsWith('--')) {
-      flags[argv[at].slice(2)] = argv[at + 1]
-      at += 1
+      const next = argv[at + 1]
+      // 没有值或紧跟着下一个 flag，就当开关；否则 --help 会吞掉后面的词。
+      if (next === undefined || next.startsWith('--')) {
+        flags[argv[at].slice(2)] = ''
+      } else {
+        flags[argv[at].slice(2)] = next
+        at += 1
+      }
     } else {
       loose.push(argv[at])
     }
@@ -382,7 +473,7 @@ function readFlags(argv) {
 
 const USAGE = `red-bucket client (Node only)
 
-  node rb.mjs login   [--origin URL] [--client NAME]
+  node rb.mjs login   [--origin URL] [--client NAME] [--wait SECONDS]
   node rb.mjs logout  [--origin URL]
   node rb.mjs status  [--origin URL]
   node rb.mjs version
@@ -393,6 +484,11 @@ const USAGE = `red-bucket client (Node only)
 Run install without --target to have the server list the harnesses it
 translates to; this client keeps no list of its own, so a harness added
 to the server works here without updating the skill.
+
+login prints a link, then waits --wait seconds (default 20) for the
+browser approval. If that runs out it exits 0 and keeps the code; run
+login or status again after approving and the token is collected. No
+new code is issued while one is still valid.
 
 upload sends every file under <local-dir> (text as text, anything else
 as base64) as one asset rooted at --path, default the directory's name.
@@ -417,7 +513,7 @@ async function main(argv) {
   }
   const origin = normOrigin(flags.origin || process.env.RED_BUCKET_URL || DEFAULT_ORIGIN)
   let said
-  if (command === 'login') said = await login(origin, flags.client || 'unknown-agent')
+  if (command === 'login') said = await login(origin, flags.client || 'unknown-agent', Number(flags.wait || 20) || 20)
   else if (command === 'logout') said = await logout(origin)
   else if (command === 'status') said = await status(origin)
   else if (command === 'install') said = await install(origin, loose[1], flags.target, flags.dest || process.env.RED_BUCKET_DEST || '.')

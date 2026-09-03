@@ -190,6 +190,15 @@
       .catch(deny);
   }
 
+  // Only same-origin paths. "//evil" would be a protocol-relative escape.
+  function safeNext() {
+    var raw = new URLSearchParams(window.location.search).get("next") || "";
+    if (raw.charAt(0) !== "/" || raw.charAt(1) === "/") {
+      return "";
+    }
+    return raw;
+  }
+
   var loginForm = document.getElementById("login-form");
   submits(loginForm, function () {
     return {
@@ -202,7 +211,7 @@
       done: function (data) {
         sessionStorage.setItem(tokenKey, data.token);
         sessionStorage.setItem(userKey, JSON.stringify(data.user));
-        window.location.href = "/" + data.user.username;
+        window.location.href = safeNext() || "/" + data.user.username;
       }
     };
   });
@@ -218,7 +227,8 @@
         password: registerForm.password.value
       },
       done: function () {
-        window.location.href = "/login";
+        var next = safeNext();
+        window.location.href = next ? "/login?next=" + encodeURIComponent(next) : "/login";
       }
     };
   });
