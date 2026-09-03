@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ issue.title }} · {{ bucket.full_name }}{% endblock %}
+{% block description %}Issue #{{ issue.number }} opened by {{ issue.author.username }} on {{ bucket.full_name }}.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "issues" %}
+  {% include "repo_tabs.html" %}
+  {% set back_href = base ~ "/issues" %}
+  {% set back_text = ui.tab_issues %}
+  {% include "repo_head.html" %}
+  <div class="detail-head">
+    <h1><span class="num">#{{ issue.number }}</span> {{ issue.title }}</h1>
+    <p class="detail-sub">
+      <span class="pill state-pill" data-state="{{ issue.state }}"><span class="state-dot"></span>{{ issue.state }}</span>
+      <span class="avatar">{{ issue.author.username[0] }}</span>
+      <span>{{ issue.author.username }}</span>
+      <span class="dot">·</span>
+      <span>{{ issue.created_at | short_date }}</span>
+    </p>
+  </div>
+  {% if body_html %}
+    <article class="surface" style="margin-top:18px">
+      <div class="markdown" style="padding:20px 24px">{{ body_html|safe }}</div>
+    </article>
+  {% endif %}
+  <h2 class="section-head">{{ ui.comments }}</h2>
+  {% for item in comments %}
+    <div class="surface comment">
+      <div class="comment-head">
+        <span class="avatar">{{ item.author.username[0] }}</span>
+        <strong>{{ item.author.username }}</strong>
+        <span class="dot">·</span>
+        <span>{{ item.created_at | short_date }}</span>
+      </div>
+      <div class="comment-body markdown">{{ item.body_html|safe }}</div>
+    </div>
+  {% else %}
+    <div class="surface"><div class="empty-state"><p>{{ ui.no_comments }}</p></div></div>
+  {% endfor %}
+  <div class="surface form-panel" data-auth="anon">
+    <div class="panel-body" style="text-align:center">
+      <p class="muted" style="margin:0">{{ ui.join_hint }} <a href="/login">{{ ui.sign_in }}</a></p>
+    </div>
+  </div>
+  <div class="surface form-panel hidden" data-auth="user">
+    <div class="panel-head"><span class="grow">{{ ui.add_comment }}</span></div>
+    <div class="panel-body">
+      <form class="stack" id="comment-form">
+        <label for="comment-body">{{ ui.comment_label }}</label>
+        <textarea id="comment-body" name="body" rows="4" required></textarea>
+        <div class="form-actions">
+          <button class="install" type="submit">{{ ui.comment_btn }}</button>
+        </div>
+        <p id="form-error" class="form-error"></p>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  window.RB_BUCKET = {{ bucket | tojson }};
+  window.RB_ISSUE = {{ issue.number }};
+</script>
+{% endblock %}

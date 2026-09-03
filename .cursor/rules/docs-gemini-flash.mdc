@@ -5,8 +5,10 @@ alwaysApply: true
 
 # 文档走 Gemini Flash
 
+完整模型分工见仓库根目录 `AGENTS.md`。文档这一条与那里一致：
+
 凡是 README、CONTRIBUTING、用户可见的 Markdown 文档、技能说明（SKILL.md 正文）、GitHub 仓库介绍文案的撰写或修改，必须先交给 Gemini Flash（本环境模型 slug：`gemini-3.7-flash-high`）起草或改写，再由当前 agent 核对事实后落盘。
 
 不要自己直接写或大改这类文档。OpenSpec 的 Requirement 或 Scenario 契约、DDL、API 目录、代码注释不在此列。
 
-给 Gemini Flash 的材料必须带上已冻结的事实：产品名 red-bucket、`user/bucket`、三种名字（copy、install-script、translated fetch）、API 在 `/api/v1/`、开源地址 `https://github.com/370025263/red-bucket`。禁止让它发明新术语或新端点。
+给 Gemini Flash 的材料必须带上已冻结的事实：产品名 red-bucket、`user/bucket`、三种名字（copy、install-script、translated fetch）、API 在 `/api/v1/`、开源地址 `https://github.com/370025263/red-bucket`、官方 origin `https://redbucket.store`。禁止让它发明新术语或新端点。

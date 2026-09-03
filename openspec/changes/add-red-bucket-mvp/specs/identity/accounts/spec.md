@@ -3,6 +3,30 @@
 定义用户注册、认证、登出、改用户名，以及匿名读取边界：写操作一律需要已认证账号，而公开内容无需账号即可读取。
 
 ## ADDED Requirements
+### Requirement: Browser hand-off for agents
+API MUST 提供一条不让 agent 接触密码的登录路径：agent 发起
+`POST /api/v1/auth/device`，拿到一个只留在自己进程里的 `device_code`、
+一个给人看的短 `user_code`、以及浏览器地址；人在浏览器里登录并在
+`/link/<user_code>` 上明确同意或拒绝；agent 用 `device_code` 轮询
+`POST /api/v1/auth/device/token` 取回 token。`user_code` 的字母表 MUST
+排除易混字符（I、L、O、U、0、1）。device code MUST 在 600 秒后过期，
+MUST 一次性：token 被取走后该 code 立刻失效。未知、过期、已取走的
+device code MUST 一律 404，彼此不可区分。未认证的调用方 MUST NOT 能
+同意或拒绝任何 device code。`device_code` MUST NOT 出现在任何 HTML
+页面或 URL 里；库内只存它的 SHA-256。
+
+#### Scenario: Agent obtains a token without seeing the password
+- **WHEN** agent 发起 device 登录，人在浏览器里登录后点同意，agent 随后轮询
+- **THEN** 轮询返回 `approved` 与一枚可用的 bearer token，且全过程 agent
+  没有拿到过密码
+
+#### Scenario: A collected device code is dead
+- **WHEN** 同一个 `device_code` 第二次被拿去轮询
+- **THEN** 返回 404，与从未存在过的 code 不可区分
+
+#### Scenario: Anonymous cannot approve
+- **WHEN** 未认证的调用方对某个 `user_code` 提交同意
+- **THEN** 返回 401，该 device code 仍是 pending
 
 ### Requirement: User registration
 系统 MUST 允许访客用唯一用户名和一份凭证（Phase 1 为 email + password）注册账号。用户名必须唯一（大小写不敏感），3-39 个字符，匹配 `[a-z0-9]([a-z0-9-]*[a-z0-9])?`，因为用户名是每个 bucket URL 的命名空间前缀。邮箱必须唯一（大小写不敏感），并且是可解析的邮箱地址。密码长度 MUST 至少 8 个字符；短于 8 个字符以 HTTP 422 拒绝，并点名 `password`。注册成功返回 HTTP 201、`Location: /api/v1/users/{username}`，正文是公开资料（`id`、`username`、`created_at`），不签发 token，不含 email、密码或哈希。

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.username }} · red-bucket{% endblock %}
+{% block description %}{{ profile.username }} on red-bucket: {{ buckets|length }} bucket(s) of agent assets.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+<div class="profile-well">
+  <div class="profile-head">
+    <span class="avatar lg">{{ profile.username[0] }}</span>
+    <div>
+      <h1>{{ profile.username }}</h1>
+      <p class="muted">{{ ui.joined }} {{ profile.created_at | short_date }}</p>
+    </div>
+  </div>
+  <div class="list-head">
+    <h2 class="section-head">{{ ui.public_buckets }}</h2>
+    <span class="page-note">{{ buckets|length }}</span>
+  </div>
+  <div class="surface">
+  {% for item in buckets %}
+    <div class="bucket-card">
+      <div class="bucket-main">
+        <a class="bucket-name" href="/{{ item.username }}/{{ item.name }}">{{ item.name }}</a>
+        {% if item.description %}<p>{{ item.description }}</p>{% endif %}
+      </div>
+      <span class="vis-badge">{{ item.visibility }}</span>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>{{ ui.no_public }}</p>
+      <p class="hidden" data-auth="user"><a href="/new">{{ ui.new_bucket }}</a></p>
+    </div>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

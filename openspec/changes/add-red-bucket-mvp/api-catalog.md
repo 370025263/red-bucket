@@ -123,7 +123,7 @@ Authorization: Bearer <token>
 | 名字 | 含义 | 端点 |
 | --- | --- | --- |
 | copy（跨 bucket 复制） | 把公开（或自己的）资产拷进自己的 bucket，写 provenance | `POST .../copies` |
-| install-script（安装脚本文本） | 返回可复制的 shell 文本，给 agent 在本机落盘 | `GET .../install-script` |
+| install-script（安装程序文本） | 返回自包含的 Node 程序正文，给 agent 在本机落盘 | `GET .../install-script` |
 | translated fetch（翻译拉取） | 按目标 harness 返回翻译后的内容字节 | `GET .../translated` |
 
 不要用 `POST .../install` 同时表示这三件事。JSON 类型 `InstallRecord` 只描述 copy 的出处行。
@@ -484,6 +484,48 @@ Phase 1 矩阵必须包含（与产品方约束一致；identity 另计）：
 
 ### Users
 
+#### POST /api/v1/auth/device
+
+- Auth: 无
+- Request: `{"client": "claude"}`（可选，最多 60 字符，只作展示用）
+- Response 201:
+
+```json
+{
+  "device_code": "<只回这一次，留在 agent 进程内>",
+  "user_code": "BQ7K-2M4X",
+  "verification_url": "https://redbucket.store/link",
+  "verification_url_complete": "https://redbucket.store/link/BQ7K-2M4X",
+  "expires_in": 600,
+  "interval": 5
+}
+```
+
+`user_code` 字母表排除 I L O U 0 1。库内只存 `device_code` 的 SHA-256。
+
+#### POST /api/v1/auth/device/token
+
+- Auth: 无（`device_code` 本身即凭证）
+- Request: `{"device_code": "..."}`
+- Response 200: `{"status":"pending"}`、`{"status":"denied"}`，
+  或 `{"status":"approved","token":"...","token_type":"bearer","user":{...}}`
+- Errors: 404 未知 / 已过期 / 已取走，三者不可区分。一次性：
+  取走 token 之后同一个 code 永远 404。
+
+#### GET /api/v1/auth/device/{user_code}
+
+- Auth: 无
+- Response 200: `{"user_code","client","state","created_at"}`，
+  供 `/link/<user_code>` 页面展示。不含 `device_code`。
+- Errors: 404 未知或已过期
+
+#### POST /api/v1/auth/device/{user_code}/decision
+
+- Auth: bearer，必须是要授权的那个人
+- Request: `{"approve": true}`
+- Response 200: `{"user_code","state"}`，state 为 `approved` 或 `denied`
+- Errors: 401 未认证；404 未知或已过期；409 `device_code_used` 已经决定过
+
 #### GET /api/v1/users/me
 
 - Auth: bearer
@@ -721,9 +763,10 @@ Phase 1 矩阵必须包含（与产品方约束一致；identity 另计）：
 
 - Auth: none；私有仅 owner
 - Query: `target` 必填
-- Response 200 JSON: `{"target":"claude","script":"#!/bin/sh\n...","translated_url":"/api/v1/users/alice/buckets/tools/translated?target=claude"}`
+- Response 200 JSON: `{"target":"claude","script":"#!/usr/bin/env node\n...","translated_url":"/api/v1/users/alice/buckets/tools/translated?target=claude"}`
 - `Accept: text/plain` → 200，正文即 `script`。
-- 脚本必须把基础 URL 做成可替换模板（域名未定）。执行后：下载该 bucket 的 translated 归档，按目标 harness 本地布局落盘，退出 0。脚本只调用本目录中的公开 GET。
+- `script` 是自包含的 Node 程序（Node 18+，ESM，存成 `.mjs` 后 `node` 执行），只用 Node 内建模块；不依赖 `sh`、`curl`、`unzip`、`jq` 或 npm 包。
+- 官方 origin 是 `https://redbucket.store`。程序必须把基础 URL 做成可替换模板（未设 `RED_BUCKET_URL` 时落到官方 origin），落盘根目录由 `RED_BUCKET_DEST` 覆盖。执行后：下载该 bucket 的 translated 归档，按目标 harness 本地布局落盘，退出 0。程序只调用本目录中的公开 GET，并拒绝归档里的绝对路径与目录逃逸。
 - Errors: 404；422 缺 target / 非法 target（四种之外）
 
 非法 target 是参数错（422），不是 501。501 留给「target 合法但某个资产对不在矩阵」。脚本内部拉 translated 时走默认整桶行为。

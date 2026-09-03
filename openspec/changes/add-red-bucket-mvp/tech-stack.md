@@ -103,7 +103,7 @@ tests/
 scripts/locust/        # S9
 ```
 
-依赖写进 `pyproject.toml`。生产启动形如：`uv run uvicorn redbucket.main:app`。存储根与 SQLite 路径用环境变量，不要写死。
+依赖写进 `pyproject.toml`。生产启动形如：`uv run uvicorn redbucket.main:app`。存储根与 SQLite 路径用环境变量，不要写死。未设 `RED_BUCKET_URL` 时公开 origin 为 `https://redbucket.store`。
 
 ## 与契约如何对上
 

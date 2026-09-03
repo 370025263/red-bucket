@@ -1,0 +1,8 @@
+---
+description: 本项目允许 kimik3，前端 Task 必须用它
+alwaysApply: true
+---
+
+# 模型允许
+
+本项目允许 kimik3。发前端 Task 时默认模型是 `kimi-k3-high`。用户点名 Gemini 3.7 做前端实现时，走 `frontend-implement`，模型 `gemini-3.7-flash-high`。前端验收走 `frontend-acceptance`。完整分工见仓库根目录 `AGENTS.md`。

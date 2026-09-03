@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}red-bucket{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+{% block main_class %}landing-main{% endblock %}
+{% block head_fonts %}{% include "paper_fonts.html" %}{% endblock %}
+{% block nav_extra %}
+<a href="/" class="is-active">{{ ui.home }}</a>
+<a href="https://github.com/370025263/red-bucket">GitHub</a>
+{% endblock %}
+{% block content %}
+<section class="rb-hero">
+  <div class="rb-scene">
+    <svg class="rb-stage" viewBox="0 0 720 660" role="img"
+      aria-label="{{ ui.hero_alt }}">
+      <g class="rb-circuit">
+        <path class="rb-kerb" d="M 390 255 L 180 600 L 600 600 Z"/>
+        <path class="rb-lane" d="M 390 255 L 180 600 L 600 600 Z"/>
+      </g>
+      <g class="rb-row">
+        <g class="rb-hut" transform="translate(390,255)">
+          <path class="rb-shell" d="M -100 0 L -26 0 L -26 -88 L 26 -88 L 26 0 L 100 0 L 100 -120 L 118 -120 L 0 -212 L -118 -120 L -100 -120 Z"/>
+          <rect class="rb-pane" x="-84" y="-100" width="40" height="40"/>
+          <path class="rb-mullion" d="M -84 -80 h 40 M -64 -100 v 40"/>
+          <rect class="rb-pane" x="44" y="-100" width="40" height="40"/>
+          <path class="rb-mullion" d="M 44 -80 h 40 M 64 -100 v 40"/>
+        </g>
+        <g class="rb-hut" transform="translate(180,600)">
+          <path class="rb-shell" d="M -100 0 L -26 0 L -26 -88 L 26 -88 L 26 0 L 100 0 L 100 -120 L 118 -120 L 0 -212 L -118 -120 L -100 -120 Z"/>
+          <rect class="rb-pane" x="-84" y="-100" width="40" height="40"/>
+          <path class="rb-mullion" d="M -84 -80 h 40 M -64 -100 v 40"/>
+          <rect class="rb-pane" x="44" y="-100" width="40" height="40"/>
+          <path class="rb-mullion" d="M 44 -80 h 40 M 64 -100 v 40"/>
+        </g>
+        <g class="rb-hut" transform="translate(600,600)">
+          <path class="rb-shell" d="M -100 0 L -26 0 L -26 -88 L 26 -88 L 26 0 L 100 0 L 100 -120 L 118 -120 L 0 -212 L -118 -120 L -100 -120 Z"/>
+          <rect class="rb-pane" x="-84" y="-100" width="40" height="40"/>
+          <path class="rb-mullion" d="M -84 -80 h 40 M -64 -100 v 40"/>
+          <rect class="rb-pane" x="44" y="-100" width="40" height="40"/>
+          <path class="rb-mullion" d="M 44 -80 h 40 M 64 -100 v 40"/>
+        </g>
+      </g>
+      <g class="rb-names">
+        <text class="rb-hut-name" x="390" y="25">claude</text>
+        <text class="rb-hut-name" x="180" y="636">codex</text>
+        <text class="rb-hut-name" x="600" y="636">agents</text>
+      </g>
+      <g class="rb-traffic">
+        <g class="rb-runner" style="transform: translate(320px, 370px);
+            animation-duration: 15.5s; animation-delay: -1.41s;
+            --rb-step: 0.38s;">
+          <g transform="scale(1.12)">
+            <g class="rb-bob">
+              <g class="rb-body">
+                <g class="rb-leg rb-alt"><rect x="-9" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g class="rb-arm"><rect x="-18.5" y="-56" width="6.5" height="26" rx="3.2"/></g>
+                <circle cx="0" cy="-72" r="13"/>
+                <rect x="-14" y="-60" width="28" height="39" rx="13"/>
+                <g class="rb-leg"><rect x="2" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g transform="rotate(-12,15.25,-56)"><rect x="12" y="-56" width="6.5" height="23" rx="3.2"/></g>
+                <g class="rb-pail" transform="translate(34,-34)">
+                  <path class="rb-pail-wire" d="M -15 0 C -15 -16 15 -16 15 0"/>
+                  <path class="rb-pail-body" d="M -30 0 H 30 L 25 30 C 25 34 -25 34 -25 30 Z"/>
+                  <text class="rb-word" x="0" y="12">subagent</text>
+                  <text class="rb-word" x="0" y="25">skill</text>
+                  <path class="rb-pail-wire rb-pail-rim" d="M -32 0 H 32"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g class="rb-runner" style="transform: translate(320px, 600px);
+            animation-duration: 18.0s; animation-delay: -7.64s;
+            --rb-step: 0.40s;">
+          <g transform="scale(1.15)">
+            <g class="rb-bob">
+              <g class="rb-body">
+                <g class="rb-leg rb-alt"><rect x="-9" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g class="rb-arm"><rect x="-18.5" y="-56" width="6.5" height="26" rx="3.2"/></g>
+                <circle cx="0" cy="-72" r="13"/>
+                <rect x="-14" y="-60" width="28" height="39" rx="13"/>
+                <g class="rb-leg"><rect x="2" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g transform="rotate(-12,15.25,-56)"><rect x="12" y="-56" width="6.5" height="23" rx="3.2"/></g>
+                <g class="rb-pail" transform="translate(34,-34)">
+                  <path class="rb-pail-wire" d="M -15 0 C -15 -16 15 -16 15 0"/>
+                  <path class="rb-pail-body" d="M -30 0 H 30 L 25 30 C 25 34 -25 34 -25 30 Z"/>
+                  <text class="rb-word" x="0" y="12">plugin</text>
+                  <text class="rb-word" x="0" y="25">mcp</text>
+                  <path class="rb-pail-wire rb-pail-rim" d="M -32 0 H 32"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g class="rb-runner" style="transform: translate(530px, 485px);
+            animation-duration: 16.5s; animation-delay: -12.56s;
+            --rb-step: 0.36s;">
+          <g transform="scale(1.1)">
+            <g class="rb-bob">
+              <g class="rb-body">
+                <g class="rb-leg rb-alt"><rect x="-9" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g class="rb-arm"><rect x="-18.5" y="-56" width="6.5" height="26" rx="3.2"/></g>
+                <circle cx="0" cy="-72" r="13"/>
+                <rect x="-14" y="-60" width="28" height="39" rx="13"/>
+                <g class="rb-leg"><rect x="2" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g transform="rotate(-12,15.25,-56)"><rect x="12" y="-56" width="6.5" height="23" rx="3.2"/></g>
+                <g class="rb-pail" transform="translate(34,-34)">
+                  <path class="rb-pail-wire" d="M -15 0 C -15 -16 15 -16 15 0"/>
+                  <path class="rb-pail-body" d="M -30 0 H 30 L 25 30 C 25 34 -25 34 -25 30 Z"/>
+                  <text class="rb-word" x="0" y="12">subagent</text>
+                  <text class="rb-word" x="0" y="25">plugin</text>
+                  <path class="rb-pail-wire rb-pail-rim" d="M -32 0 H 32"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g class="rb-runner" style="transform: translate(180px, 600px);
+            animation-duration: 14.0s; animation-delay: -3.82s;
+            --rb-step: 0.34s;">
+          <g transform="scale(1.18)">
+            <g class="rb-bob">
+              <g class="rb-body">
+                <g class="rb-leg rb-alt"><rect x="-9" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g class="rb-arm"><rect x="-18.5" y="-56" width="6.5" height="26" rx="3.2"/></g>
+                <circle cx="0" cy="-72" r="13"/>
+                <rect x="-14" y="-60" width="28" height="39" rx="13"/>
+                <g class="rb-leg"><rect x="2" y="-22" width="7" height="23" rx="3.5"/></g>
+                <g transform="rotate(-12,15.25,-56)"><rect x="12" y="-56" width="6.5" height="23" rx="3.2"/></g>
+                <g class="rb-pail" transform="translate(34,-34)">
+                  <path class="rb-pail-wire" d="M -15 0 C -15 -16 15 -16 15 0"/>
+                  <path class="rb-pail-body" d="M -30 0 H 30 L 25 30 C 25 34 -25 34 -25 30 Z"/>
+                  <text class="rb-word" x="0" y="12">mcp</text>
+                  <text class="rb-word" x="0" y="25">skill</text>
+                  <path class="rb-pail-wire rb-pail-rim" d="M -32 0 H 32"/>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <div class="rb-call">
+    <a class="rb-pail-glow" href="/register" tabindex="-1" aria-hidden="true">
+      <svg class="rb-pail-mark" viewBox="0 0 120 120" aria-hidden="true">
+        <path class="rb-pail-wire" d="M 34 46 C 34 17 86 17 86 46"/>
+        <path class="rb-pail-body" d="M 20 46 H 100 L 90 101 C 90 109 30 109 30 101 Z"/>
+        <path class="rb-pail-wire rb-pail-rim" d="M 17 46 H 103"/>
+      </svg>
+    </a>
+    <a class="install rb-call-btn" href="/register">{{ ui.cta_hero }}</a>
+    <p class="rb-call-note">{{ ui.hero_note }}</p>
+  </div>
+</section>
+
+<section class="landing-hero">
+  <h1 class="landing-title">
+    {{ ui.hero_a }}
+    <span class="landing-title-line">{{ ui.hero_b }}
+      <em>{{ ui.hero_em }}</em>
+    </span>
+  </h1>
+  <p class="landing-sub">{{ ui.hero_sub }}</p>
+  <div class="install-box">
+    <input id="tab-skill" type="radio" name="install-tab" checked>
+    <input id="tab-curl" type="radio" name="install-tab">
+    <div class="install-tabs" role="tablist">
+      <label for="tab-skill">SKILL</label>
+      <label for="tab-curl">CURL</label>
+    </div>
+    <div class="install-row pane-skill">
+      <pre id="cmd-skill">$ npx skills add 370025263/red-bucket --skill red-bucket -g -y</pre>
+      <button type="button" class="copy-btn" data-copy="cmd-skill">{{ ui.copy_btn }}</button>
+    </div>
+    <div class="install-row pane-curl">
+      <pre id="cmd-curl">$ curl -sSL "https://redbucket.store/api/v1/users/{username}/buckets/{bucket}/install-script?target=claude" -H "Accept: text/plain" | sh</pre>
+      <button type="button" class="copy-btn" data-copy="cmd-curl">{{ ui.copy_btn }}</button>
+    </div>
+  </div>
+  <div class="harness-ring">
+    <span class="ring-label">{{ ui.ring_label }}</span>
+    <span class="chip">claude</span>
+    <span class="chip">codex</span>
+    <span class="chip">agents</span>
+    <span class="chip">openclaw</span>
+  </div>
+  <p class="landing-more">
+    <a href="https://github.com/370025263/red-bucket">{{ ui.browse_src }}</a>
+  </p>
+</section>
+
+<hr class="story-rule">
+
+<section class="landing-story">
+  <h2>{{ ui.story1_h }}</h2>
+  <p>{{ ui.story1_p }}</p>
+</section>
+
+<section class="landing-story">
+  <h2>{{ ui.story2_h }}</h2>
+  <ul>
+    <li>{{ ui.story2_a }}</li>
+    <li>{{ ui.story2_b }}</li>
+    <li>{{ ui.story2_c }}</li>
+  </ul>
+</section>
+
+<section class="landing-story">
+  <h2>{{ ui.story3_h }}</h2>
+  <p>{{ ui.story3_p }}</p>
+</section>
+{% endblock %}

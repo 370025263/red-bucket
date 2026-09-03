@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% import "icons.html" as icons %}
+{% block title %}{{ blob.path }} · {{ bucket.full_name }}{% endblock %}
+{% block description %}{{ blob.path }} in {{ bucket.full_name }} on red-bucket.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "code" %}
+  {% include "repo_tabs.html" %}
+  <div class="code-bar">
+    <span class="crumbs">
+      <a href="{{ base }}">{{ bucket.name }}</a>
+      {% for part in blob.path.split("/") %}
+        <span class="sep">/</span>
+        {% if loop.last %}<span class="here">{{ part }}</span>{% else %}<a href="{{ base }}/tree/{{ blob.path.split('/')[:loop.index] | join('/') }}">{{ part }}</a>{% endif %}
+      {% endfor %}
+    </span>
+    <a class="back-link" href="{{ base }}{% if parent %}/tree/{{ parent }}{% endif %}">{{ ui.back_dir }}</a>
+  </div>
+  <div class="surface blob-body">
+    <div class="panel-head">
+      {{ icons.file() }}
+      <span class="grow">{{ blob.path }}</span>
+      <span class="panel-note">{{ blob.size_bytes }} bytes</span>
+    </div>
+    {% if html %}
+      <div class="markdown" style="padding:22px 26px 26px">{{ html|safe }}</div>
+    {% elif binary %}
+      <p class="muted" style="padding:18px">{{ ui.binary_file }}</p>
+    {% else %}
+      <pre class="script">{{ blob.content_text }}</pre>
+    {% endif %}
+  </div>
+</div>
+<script>window.RB_BUCKET = {{ bucket | tojson }};</script>
+{% endblock %}

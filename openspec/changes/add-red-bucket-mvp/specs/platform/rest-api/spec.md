@@ -52,8 +52,8 @@
 - **THEN** 发布门禁失败，并且按端点类报告该回归
 
 ### Requirement: One-click install script entry
-系统 MUST 提供每 bucket 的 `GET .../install-script` 端点，返回一段可复制粘贴的 shell 命令或脚本，AI agent 可以执行它，把该 bucket 的资产拉取并放到所选目标 harness 的本地布局中。默认 JSON 为 `{target, script, translated_url}`；`Accept: text/plain` 时只返回脚本正文。脚本 MUST 把基础 URL 做成可替换模板，并且只调用本目录中的公开 GET。本端点不是跨桶 `copies`，也不是翻译字节本身。
+系统 MUST 提供每 bucket 的 `GET .../install-script` 端点，返回一段 AI agent 可以执行的安装程序，把该 bucket 的资产拉取并放到所选目标 harness 的本地布局中。该程序 MUST 是自包含的 Node 程序（Node 18+），只使用 Node 内建模块：不得依赖 `sh`、`curl`、`unzip`、`jq` 或任何 npm 包，以便在 Windows 与不带 `unzip` 的精简容器里同样可用。默认 JSON 为 `{target, script, translated_url}`；`Accept: text/plain` 时只返回程序正文。程序 MUST 把基础 URL 做成可替换模板（未设 `RED_BUCKET_URL` 时落到官方 origin），落盘根目录由 `RED_BUCKET_DEST` 覆盖，并且只调用本目录中的公开 GET。程序 MUST 拒绝归档中的绝对路径与逃出目标目录的路径。本端点不是跨桶 `copies`，也不是翻译字节本身。
 
 #### Scenario: Install script fetches and places assets
-- **WHEN** 用户复制某个公开 bucket、目标 harness 为 `claude` 的安装脚本，并在干净环境中执行它
-- **THEN** 该脚本下载翻译后的 bucket 内容，并把文件放到 claude 风格的本地布局中，以 0 退出
+- **WHEN** 用户取到某个公开 bucket、目标 harness 为 `claude` 的安装程序，存成 `.mjs` 后在只有 Node、没有 `curl` 与 `unzip` 的干净环境中 `node` 执行它
+- **THEN** 该程序下载翻译后的 bucket 内容，并把文件放到 claude 风格的本地布局中，以 0 退出

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ ui.not_found }} · red-bucket{% endblock %}
+{% block body_class %}paper-page{% endblock %}
+{% block head_fonts %}{% include "paper_fonts.html" %}{% endblock %}
+{% block og_url %}{{ origin }}{% endblock %}
+{% block content %}
+<div class="form-page-wrap">
+  <div class="card-form" style="text-align: center;">
+    <div class="form-header" style="margin-bottom: 16px;">
+      {% include "brand_mark.html" %}
+      <h1>{{ ui.not_found }}</h1>
+      <p>{{ ui.not_found_hint }}</p>
+    </div>
+    <div style="margin-top: 20px;">
+      <a href="/" class="install" style="display: inline-block; width: auto; padding: 8px 18px;">{{ ui.back_home }}</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

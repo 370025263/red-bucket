@@ -19,6 +19,7 @@ Phase 1 不把官方 skill 做成独立二进制，也不为它另开 API。skil
 
 - 服务端源码（`src/redbucket/`，本期先有 lint 骨架）
 - skill 发现根：`skills/red-bucket/SKILL.md`，满足 vercel-labs/skills 的发现约定（目录内有带 `name` 与 `description` 的 SKILL.md）
+- skill 自带客户端：`skills/red-bucket/scripts/rb.mjs`，只依赖 Node 18+ 内建模块（无 `sh`/`curl`/`unzip`/`jq`/npm 包），提供 `login`/`logout`/`status`/`install`/`create`/`upload`；凭据落盘与 origin 归一化以它为准实现；发布侧（建桶、上传资产）也走它，agent 不手拼 `POST .../assets` 的请求体
 - 规划与契约（`openspec/`、`sdd/adr/`）
 
 这样做的原因：addyosmani/agent-skills 一类仓库就是「一个 GitHub 首页 + `npx skills add owner/repo`」。再拆 `red-bucket-skill` 兄弟仓可以以后再说；本期不建第二个远程，避免文档和 skill 正文分叉。
@@ -29,7 +30,7 @@ GitHub 首页要有：红桶 logo、一句话安装、`npx skills` 命令、inst
 
 发现约定：本仓库根下 `skills/red-bucket/SKILL.md`。
 
-用户侧命令（域名未定时用仓库本身）：
+用户侧命令（skill 仍从 GitHub 仓库发现）：
 
 ```bash
 npx skills add 370025263/red-bucket --skill red-bucket -g -y
@@ -54,11 +55,11 @@ skill 的 `name` 必须是 `red-bucket`。`description` 必须写清何时触发
 公开 bucket、目标 harness 为 `claude` 时：
 
 ```bash
-curl -sSL "$RED_BUCKET_URL/api/v1/users/{username}/buckets/{bucket}/install-script?target=claude" \
+curl -sSL "https://redbucket.store/api/v1/users/{username}/buckets/{bucket}/install-script?target=claude" \
   -H "Accept: text/plain" | sh
 ```
 
-`RED_BUCKET_URL` 是部署后的 origin，安装脚本必须把基础 URL 做成可替换模板（域名未定）。脚本只调用 catalog 里的公开 GET，下载 translated zip，按目标 harness 本地布局落盘，退出 0。
+官方 origin 是 `https://redbucket.store`。安装脚本仍把基础 URL 做成可替换模板：未设 `RED_BUCKET_URL` 时落到官方 origin，本机与自建覆盖该变量。脚本只调用 catalog 里的公开 GET，下载 translated zip，按目标 harness 本地布局落盘，退出 0。
 
 私有桶必须带 Bearer，不能把 token 写进可粘贴的公开脚本正文；私有安装走已登录 agent 调 `GET .../translated`（skill 里写清）。
 

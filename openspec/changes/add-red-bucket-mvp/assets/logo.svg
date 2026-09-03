@@ -1,10 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="red-bucket">
-  <!-- Canonical mark: bucket emoji (U+1FAA3) as a first-party SVG, body in brand red.
-       Do not ship the system emoji; platforms paint >£ metal/blue and it cannot be recolored. -->
-  <title>red-bucket</title>
-  <path d="M10 11.2c0-4.2 12-4.2 12 0" fill="none" stroke="#9B1830" stroke-width="2" stroke-linecap="round"/>
-  <ellipse cx="16" cy="13.2" rx="9.2" ry="2.8" fill="#E24B5A"/>
-  <path d="M7.2 13.2l1.7 13.1c.2 1.4 2.8 2.4 7.1 2.4s6.9-1 7.1-2.4l1.7-13.1z" fill="#C41E3A"/>
-  <ellipse cx="16" cy="13.2" rx="9.2" ry="2.8" fill="none" stroke="#9B1830" stroke-width="1.1"/>
-  <path d="M10.4 15.4c.3 4.6.7 8.4 1 10.2" fill="none" stroke="#E24B5A" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="red-bucket">
+  <path d="M11 13c0-6.2 10-6.2 10 0" fill="none" stroke="#9B1830" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M6.8 13.4h18.4l-1.9 14.2c-.15 1.15-2.4 2-7.3 2s-7.15-.85-7.3-2z" fill="#C41E3A"/>
+  <path d="M6.2 13.4h19.6" fill="none" stroke="#9B1830" stroke-width="2.8" stroke-linecap="round"/>
 </svg>
