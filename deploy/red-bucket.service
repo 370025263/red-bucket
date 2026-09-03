@@ -1,0 +1,22 @@
+[Unit]
+Description=red-bucket public site (redbucket.store)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/red-bucket
+Environment=HOME=/home/admin
+Environment=RED_BUCKET_DATA=/home/admin/var/red-bucket
+Environment=RED_BUCKET_URL=https://redbucket.store
+ExecStart=/home/admin/red-bucket/.venv/bin/uvicorn redbucket.main:app --host 10.255.1.1 --port 8032 --proxy-headers --forwarded-allow-ips=10.255.1.0/24
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

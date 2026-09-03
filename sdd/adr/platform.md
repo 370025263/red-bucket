@@ -1,6 +1,6 @@
 
 ### 域名
-暂时不指定。
+官方 origin 是 `https://redbucket.store`（apex，HTTPS，不要 `www`）。本机与自建用环境变量 `RED_BUCKET_URL` 覆盖。不要改 `sdd/adr/platform.original.md`。
 
 ### 安装路径
 
@@ -59,9 +59,13 @@
 提供APP安装入口，用户可以有图形化
 
 #### 验收测试
-用户面接口延迟，在1000用户下，并发10，能95% 接口延迟全部1s内。
+用户面接口延迟，在1000用户下，并发10，能95% 接口延迟全部1s内。场景与判定见 `openspec/changes/add-red-bucket-mvp/test-plan.md` 的 S9，打的是 `api-catalog.md` 里的 `/api/v1/`，不是 HTML。
 
-测试使用mock用户，进行跨harness的迁移，同样功能在迁移前和迁移后保持一致。
+行为以各 delta spec 的 Scenario 为准：S1 对 identity/accounts，S2 对 buckets/management，S3 对 buckets/assets，S4 与 S8 对 translation/harness-formatter（含 plugin 与 subagent），S5 对 community/collaboration，S6 对 platform/web-ui，S7 对 platform/git-storage，S10 对 platform/rest-api，S11 对 platform/metadata-store。
+
+跨 harness 迁移：Phase 1 用 golden fixture 与 `cross-transfer/`、`cross-transfer/experiments/` 做结构等价；本机未跑 Claude 或 Codex 运行时。同样功能在翻译前后按 checklist 对齐，不支持的 mcp 对以 501 或整桶 skip notes 处理。
+
+本机 `make test` 覆盖 S1–S8、S10、S11。S9 于 2026-09-01 按 test-plan 单独跑完：10 并发、5 分钟、约 10993 次请求、失败 0；聚合 p95 约 18ms，最慢端点 raw 下载 p95 约 20ms。报告在 `reports/s9_stats.csv` 与 `reports/s9.html`。翻译拉取打的是同一 `(commit, target)`，热缓存居多；raw 走 git，不靠翻译缓存。
 
 ### 原文存档
 OpenSpec 变更 `add-red-bucket-mvp` 细化之前的原文见 `sdd/adr/platform.original.md`。不要改那份副本。

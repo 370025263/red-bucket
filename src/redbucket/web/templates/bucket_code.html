@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% import "icons.html" as icons %}
+{% block title %}{{ bucket.full_name }}{% endblock %}
+{% block description %}{% if bucket.description %}{{ bucket.description }}{% else %}Agent assets on red-bucket, translated to your harness on fetch.{% endif %}{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "code" %}
+  {% include "repo_tabs.html" %}
+  <div class="grid">
+    <section>
+      <div class="code-bar">
+        <span class="crumbs">
+          {% if crumbs %}
+            <a href="{{ base }}">{{ bucket.name }}</a>
+            {% for crumb in crumbs %}
+              <span class="sep">/</span>
+              {% if crumb.href %}<a href="{{ crumb.href }}">{{ crumb.name }}</a>{% else %}<span class="here">{{ crumb.name }}</span>{% endif %}
+            {% endfor %}
+          {% else %}
+            <span class="here">{{ bucket.name }}</span>
+          {% endif %}
+        </span>
+        <details class="install-details">
+          <summary class="install">{{ ui.install }}</summary>
+          <div class="install-menu">
+            <p class="way-title">{{ ui.way_guide_title }}</p>
+            <p class="way-hint">{{ ui.way_guide_hint }}</p>
+            <pre class="script" id="guide-url">{{ origin }}/{{ bucket.username }}/{{ bucket.name }}/guide.md</pre>
+            <p class="menu-foot">
+              <a class="guide-open" href="{{ base }}/guide.md">{{ ui.way_guide_open }}</a>
+              <button type="button" class="copy-btn" data-copy="guide-url">{{ ui.copy_btn }}</button>
+            </p>
+          </div>
+        </details>
+      </div>
+      <div class="surface">
+        <div class="commit-bar">
+          {% if latest_commit %}
+            <span class="avatar">{{ latest_commit.author.username[0] }}</span>
+            <span class="who">{{ latest_commit.author.username }}</span>
+            <span class="msg">{{ latest_commit.message }}</span>
+            <a class="sha" href="{{ base }}/commit/{{ latest_commit.sha }}">{{ latest_commit.short_sha }}</a>
+            <span class="dot">·</span>
+            <span>{{ latest_commit.authored_at | short_date }}</span>
+            <span class="dot">·</span>
+            <a class="count" href="{{ base }}/commits">{{ commit_count }} {{ ui.commits_word }}</a>
+          {% else %}
+            <span class="msg">{{ ui.no_commits }}</span>
+          {% endif %}
+        </div>
+        {% if entries %}
+        <table class="files">
+          <colgroup>
+            <col style="width:44%">
+            <col>
+            <col style="width:110px">
+          </colgroup>
+          <tbody>
+          {% for entry in entries %}
+          <tr>
+            <td>
+              <span class="name">
+                {% if entry.entry_type == "dir" %}
+                  {{ icons.folder() }}<a href="{{ base }}/tree/{{ entry.path }}">{{ entry.name }}</a>
+                {% else %}
+                  {{ icons.file() }}<a href="{{ base }}/blob/{{ entry.path }}">{{ entry.name }}</a>
+                {% endif %}
+                {% if entry.asset %}
+                  <span class="asset-tag">{{ entry.asset.type }} · {{ entry.asset.source_harness }}</span>
+                {% endif %}
+              </span>
+            </td>
+            <td class="meta msg">{{ entry.last_commit_message or "" }}</td>
+            <td class="meta time">{{ entry.last_commit_at | short_date }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <div class="empty-state">
+            {% include "brand_mark.html" %}
+            <p>{{ ui.empty_dir }}</p>
+            <p class="hidden" data-owner-only>{{ ui.empty_owner_hint }}</p>
+          </div>
+        {% endif %}
+      </div>
+      {% if readme_html %}
+      <article class="surface readme">
+        <div class="panel-head">
+          {{ icons.file() }}
+          <span class="grow">{{ readme_path }}</span>
+        </div>
+        <div class="markdown">{{ readme_html|safe }}</div>
+      </article>
+      {% else %}
+      <p class="muted hidden" data-owner-only style="margin-top:16px">{{ ui.readme_hint }}</p>
+      {% endif %}
+      <details class="surface upload-disclosure hidden" data-owner-only style="margin-top:18px">
+        <summary class="panel-head" style="cursor:pointer">
+          <span class="grow">{{ ui.add_asset }}</span>
+          <span class="panel-note">{{ ui.add_asset_hint }}</span>
+        </summary>
+        <div class="panel-body">
+          <form class="stack" id="upload-form">
+            <label for="upload-type">{{ ui.asset_type }}</label>
+            <select id="upload-type" name="type">
+              <option>skill</option><option>mcp</option>
+              <option>instructions</option><option>subagent</option><option>plugin</option>
+            </select>
+            <label for="upload-source">{{ ui.source_harness }}</label>
+            <select id="upload-source" name="source_harness">
+              <option>claude</option><option>codex</option>
+              <option>agents</option><option>openclaw</option>
+            </select>
+            <label for="upload-path">{{ ui.asset_path }}</label>
+            <input id="upload-path" name="path" required placeholder="e.g. skills/demo">
+            <label for="upload-file-path">{{ ui.main_file }}</label>
+            <input id="upload-file-path" name="file_path" value="SKILL.md" required>
+            <label for="upload-content">{{ ui.content }}</label>
+            <textarea id="upload-content" name="content_text" rows="8" required></textarea>
+            <div class="form-actions">
+              <button class="install" type="submit">{{ ui.upload }}</button>
+            </div>
+            <p id="form-error" class="form-error"></p>
+          </form>
+        </div>
+      </details>
+    </section>
+    <aside class="surface about">
+      <h2>{{ ui.about }}</h2>
+      <p class="about-desc{% if not bucket.description %} is-empty{% endif %}">{{ bucket.description or ui.no_desc }}</p>
+      <div class="about-block">
+        <span class="label">{{ ui.visibility }}</span>
+        <span class="pill">{{ bucket.visibility }}</span>
+      </div>
+      {% if bucket.template %}
+      <div class="about-block">
+        <span class="label">{{ ui.template }}</span>
+        <span class="pill mono">{{ bucket.template }}</span>
+      </div>
+      {% endif %}
+      <div class="about-block">
+        <span class="label">{{ ui.usage }}</span>
+        <div class="meter" title="{{ bucket.usage_bytes }} / {{ bucket.limit_bytes }} bytes">
+          <i style="width: {{ [(bucket.usage_bytes / bucket.limit_bytes * 100) if bucket.limit_bytes else 0, 100] | min | round(2) }}%"></i>
+        </div>
+        <p class="meter-note">
+          {%- set used = bucket.usage_bytes or 0 -%}
+          {%- if used < 1024 %}{{ used }} B
+          {%- elif used < 1048576 %}{{ (used / 1024) | round(1) }} KB
+          {%- else %}{{ (used / 1048576) | round(1) }} MB{% endif %}
+          / {{ ((bucket.limit_bytes or 0) / 1048576) | round(1) }} MB
+        </p>
+      </div>
+      <div class="about-block">
+        <span class="label">{{ ui.harness_mix }}</span>
+        {% if bucket.harness_mix %}
+          <div class="about-tags">
+            {% for harness, count in bucket.harness_mix.items() %}
+              <span class="pill mono">{{ harness }} <span class="count">{{ count }}</span></span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="muted small">{{ ui.no_assets }}</span>
+        {% endif %}
+      </div>
+      {% if readme_html %}
+        <a class="about-readme" href="{{ base }}/blob/{{ readme_path }}">{{ icons.file() }} README</a>
+      {% endif %}
+    </aside>
+  </div>
+</div>
+<script>
+  window.RB_BUCKET = {{ bucket | tojson }};
+</script>
+{% endblock %}

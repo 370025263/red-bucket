@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ ui.new_title }} · red-bucket{% endblock %}
+{% block body_class %}paper-page{% endblock %}
+{% block head_fonts %}{% include "paper_fonts.html" %}{% endblock %}
+{% block content %}
+<div class="form-page-wrap">
+  <div class="card-form wide">
+    <div class="form-header">
+      {% include "brand_mark.html" %}
+      <h1>{{ ui.new_title }}</h1>
+      <p>{{ ui.new_hint }}</p>
+    </div>
+    <form class="stack" id="new-bucket-form">
+      <label for="bucket-name">{{ ui.bucket_name }}</label>
+      <input id="bucket-name" name="name" required maxlength="100">
+      <label for="bucket-visibility">{{ ui.visibility }}</label>
+      <select id="bucket-visibility" name="visibility">
+        <option value="public">public</option>
+        <option value="private">private</option>
+      </select>
+      <label for="bucket-template">{{ ui.template }}</label>
+      <select id="bucket-template" name="template">
+        <option value="">none</option>
+        <option value="agents">agents</option>
+        <option value="claude">claude</option>
+        <option value="codex">codex</option>
+        <option value="openclaw">openclaw</option>
+      </select>
+      <label for="bucket-description">{{ ui.description }} <span class="muted">({{ ui.optional }})</span></label>
+      <textarea id="bucket-description" name="description" maxlength="350" rows="3"></textarea>
+      <div class="form-actions">
+        <button class="install" type="submit">{{ ui.create }}</button>
+      </div>
+      <p id="form-error" class="form-error"></p>
+    </form>
+  </div>
+</div>
+{% endblock %}

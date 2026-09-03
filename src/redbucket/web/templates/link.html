@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ ui.link_title }} · red-bucket{% endblock %}
+{% block body_class %}paper-page{% endblock %}
+{% block head_fonts %}{% include "paper_fonts.html" %}{% endblock %}
+{% block content %}
+<div class="form-page-wrap">
+  <div class="card-form">
+    <div class="form-header">
+      {% include "brand_mark.html" %}
+      <h1>{{ ui.link_title }}</h1>
+      <p>{{ ui.link_hint }}</p>
+    </div>
+    <form class="stack" id="link-form" action="/link" method="get">
+      <label for="user-code">{{ ui.link_code }}</label>
+      <input id="user-code" name="code" required autocomplete="off"
+        spellcheck="false" placeholder="XXXX-XXXX" maxlength="9">
+      <div class="form-actions">
+        <button class="install" type="submit">{{ ui.link_continue }}</button>
+      </div>
+      <p id="form-error" class="form-error"></p>
+    </form>
+    <div class="form-footer-nav">{{ ui.link_expiry }}</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "icons.html" as icons %}
+{% block title %}{{ commit.message }} · {{ bucket.full_name }}{% endblock %}
+{% block description %}{{ commit.author.username }} committed {{ commit.paths|length }} path(s) to {{ bucket.full_name }}.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "code" %}
+  {% include "repo_tabs.html" %}
+  {% set back_href = base ~ "/commits" %}
+  {% set back_text = ui.commits_word|capitalize %}
+  {% include "repo_head.html" %}
+  <div class="detail-head">
+    <h1>{{ commit.message }}</h1>
+    <p class="detail-sub">
+      <span class="avatar">{{ commit.author.username[0] }}</span>
+      <span>{{ commit.author.username }}</span>
+      <span class="dot">·</span>
+      <span>{{ commit.authored_at | short_date }}</span>
+      <span class="pill mono" title="{{ commit.sha }}">{{ commit.short_sha }}</span>
+    </p>
+  </div>
+  <h2 class="section-head">{{ ui.changed_paths }}</h2>
+  <div class="surface path-list">
+    {% for path in commit.paths %}
+      <a class="list-row" href="{{ base }}/blob/{{ path }}">{{ icons.file() }}<code>{{ path }}</code></a>
+    {% endfor %}
+  </div>
+</div>
+<script>window.RB_BUCKET = {{ bucket | tojson }};</script>
+{% endblock %}

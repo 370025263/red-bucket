@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% import "icons.html" as icons %}
+{% block title %}{{ pull.title }} · {{ bucket.full_name }}{% endblock %}
+{% block description %}Pull request #{{ pull.number }} by {{ pull.author.username }} on {{ bucket.full_name }}.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "pulls" %}
+  {% include "repo_tabs.html" %}
+  {% set back_href = base ~ "/pulls" %}
+  {% set back_text = ui.tab_pulls %}
+  {% include "repo_head.html" %}
+  <div class="detail-head">
+    <h1><span class="num">#{{ pull.number }}</span> {{ pull.title }}</h1>
+    <p class="detail-sub">
+      <span class="pill state-pill" data-state="{{ pull.state }}"><span class="state-dot"></span>{{ pull.state }}</span>
+      <span class="avatar">{{ pull.author.username[0] }}</span>
+      <span>{{ pull.author.username }}</span>
+      <span class="dot">·</span>
+      <span>{{ pull.created_at | short_date }}</span>
+    </p>
+  </div>
+  {% if body_html %}
+    <article class="surface" style="margin-top:18px">
+      <div class="comment-body markdown">{{ body_html|safe }}</div>
+    </article>
+  {% endif %}
+  <h2 class="section-head">{{ ui.proposed_files }}</h2>
+  {% for item in pull.files %}
+  <article class="surface" style="margin-bottom:14px">
+    <div class="panel-head">
+      {{ icons.file() }}
+      <span class="grow"><code>{{ item.path }}</code></span>
+      {% if item.delete %}<span class="pill">delete</span>{% endif %}
+    </div>
+    {% if item.content_text %}
+      <pre class="script proposed">{{ item.content_text }}</pre>
+    {% elif not item.delete %}
+      <p class="muted" style="padding:14px 16px; margin:0">{{ ui.binary_file }}</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+  <div class="action-bar">
+    <form id="merge-form" class="hidden" data-owner-only>
+      <button class="install" type="submit">{{ ui.merge_btn }}</button>
+    </form>
+    <form id="reject-form" class="hidden" data-owner-only>
+      <button class="btn-danger" type="submit">{{ ui.reject_btn }}</button>
+    </form>
+  </div>
+  <p id="form-error" class="form-error"></p>
+</div>
+<script>
+  window.RB_BUCKET = {{ bucket | tojson }};
+  window.RB_PULL = {{ pull.number }};
+</script>
+{% endblock %}

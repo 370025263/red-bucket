@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "demo-mcp": {
+      "args": [
+        "demo-mcp"
+      ],
+      "command": "uvx",
+      "transport": "stdio"
+    }
+  }
+}

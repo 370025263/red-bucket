@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ ui.commits_word|capitalize }} · {{ bucket.full_name }}{% endblock %}
+{% block description %}{{ items|length }} {{ ui.commits_word }} in {{ bucket.full_name }} on red-bucket.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "code" %}
+  {% include "repo_tabs.html" %}
+  {% set back_href = base %}
+  {% set back_text = bucket.name %}
+  {% set head_note = items|length ~ " " ~ ui.commits_word %}
+  {% include "repo_head.html" %}
+  <div class="surface">
+  {% for item in items %}
+    <div class="commit-row">
+      <span class="avatar">{{ item.author.username[0] }}</span>
+      <span class="commit-text">
+        <a class="commit-title" href="{{ base }}/commit/{{ item.sha }}">{{ item.message }}</a>
+        <span class="commit-sub">{{ item.author.username }} · {{ item.authored_at | short_date }}</span>
+      </span>
+      <a class="sha pill mono" href="{{ base }}/commit/{{ item.sha }}">{{ item.short_sha }}</a>
+    </div>
+  {% else %}
+    <div class="empty-state"><p>{{ ui.no_commits }}</p></div>
+  {% endfor %}
+  </div>
+</div>
+<script>window.RB_BUCKET = {{ bucket | tojson }};</script>
+{% endblock %}

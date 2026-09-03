@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ ui.tab_pulls }} · {{ bucket.full_name }}{% endblock %}
+{% block description %}{{ bucket.open_pulls_count }} open pull request(s) on {{ bucket.full_name }}.{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+{% set base = "/" ~ bucket.username ~ "/" ~ bucket.name %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "pulls" %}
+  {% include "repo_tabs.html" %}
+  {% set back_href = base %}
+  {% set back_text = bucket.name %}
+  {% set head_note = bucket.open_pulls_count ~ " open" %}
+  {% include "repo_head.html" %}
+  <div class="surface">
+  {% for item in items %}
+    <div class="list-row">
+      <span class="pill state-pill" data-state="{{ item.state }}"><span class="state-dot"></span>{{ item.state }}</span>
+      <span class="list-main">
+        <a class="list-title" href="{{ base }}/pulls/{{ item.number }}">#{{ item.number }} {{ item.title }}</a>
+        <span class="list-meta">{{ item.author.username }} · {{ item.created_at | short_date }}</span>
+      </span>
+    </div>
+  {% else %}
+    <div class="empty-state"><p>{{ ui.no_pulls }}</p></div>
+  {% endfor %}
+  </div>
+  <div class="surface form-panel" data-auth="anon">
+    <div class="panel-body" style="text-align:center">
+      <p class="muted" style="margin:0">{{ ui.join_hint }} <a href="/login">{{ ui.sign_in }}</a></p>
+    </div>
+  </div>
+  <div class="surface form-panel hidden" data-auth="user">
+    <div class="panel-head"><span class="grow">{{ ui.open_pull }}</span></div>
+    <div class="panel-body">
+      <form class="stack" id="pull-form">
+        <label for="pull-title">{{ ui.title }}</label>
+        <input id="pull-title" name="title" required>
+        <label for="pull-body">{{ ui.body }}</label>
+        <textarea id="pull-body" name="body" rows="4"></textarea>
+        <label for="pull-file-path">{{ ui.file_path }}</label>
+        <input id="pull-file-path" name="file_path" required placeholder="e.g. skills/my-skill/SKILL.md">
+        <label for="pull-content">{{ ui.content }}</label>
+        <textarea id="pull-content" name="content_text" rows="8" required></textarea>
+        <div class="form-actions">
+          <button class="install" type="submit">{{ ui.submit_pull }}</button>
+        </div>
+        <p id="form-error" class="form-error"></p>
+      </form>
+    </div>
+  </div>
+</div>
+<script>window.RB_BUCKET = {{ bucket | tojson }};</script>
+{% endblock %}

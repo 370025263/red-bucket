@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}red-bucket{% endblock %}</title>
+  <meta name="description" content="{% block description %}A user/bucket hub for agent skills, MCP configs, instructions, subagents and plugins, translated between Claude, Codex, Agents and OpenClaw at fetch time.{% endblock %}">
+  <meta property="og:site_name" content="red-bucket">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:image" content="{{ origin }}/static/logo.svg">
+  <meta property="og:url" content="{% block og_url %}{{ origin }}{{ request.url.path }}{% endblock %}">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="/static/logo.svg?v=6" type="image/svg+xml">
+  {% block head_fonts %}{% endblock %}
+  <link rel="stylesheet" href="/static/app.css?v=6">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <header class="site-header">
+    <a class="brand" href="/">
+      {% include "brand_mark.html" %}
+      <span>red-bucket</span>
+    </a>
+    <nav class="site-nav">
+      {% block nav_extra %}{% endblock %}
+      <a href="/login" data-auth="anon">{{ ui.login }}</a>
+      <a href="/register" class="nav-cta" data-auth="anon">{{ ui.register }}</a>
+      <a href="/new" data-auth="user" class="hidden">{{ ui.new_bucket }}</a>
+      <a href="#" id="whoami" data-auth="user" class="hidden"></a>
+      <a href="#" id="logout-link" data-auth="user" class="hidden">{{ ui.logout }}</a>
+      <span class="lang-switch">
+        <a href="?lang=en"{% if lang == 'en' %} class="is-active"{% endif %}>EN</a>
+        <a href="?lang=zh"{% if lang == 'zh' %} class="is-active"{% endif %}>中文</a>
+      </span>
+    </nav>
+  </header>
+  <main class="{% block main_class %}wrap{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-foot">
+    <a href="https://github.com/370025263/red-bucket">GitHub</a>
+    <span>MIT</span>
+    <span>https://redbucket.store</span>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>window.RB_UI = {{ ui | tojson }};</script>
+  <script src="/static/manage.js?v=6"></script>
+</body>
+</html>

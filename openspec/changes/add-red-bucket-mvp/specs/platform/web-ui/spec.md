@@ -1,6 +1,6 @@
 ## Purpose
 
-定义轻量 Web 前端：对照 pi.dev 的全局框、对照 GitHub 的 bucket 详情页、red-bucket 自己的文案，以及红色 bucket 标识。浏览公开 buckets，管理自己的 buckets，并展示一键安装脚本。
+定义轻量 Web 前端：对照 pi.dev 的全局框、对照 GitHub 的 bucket 详情页、red-bucket 自己的文案，以及红色 bucket 标识。浏览公开 buckets，管理自己的 buckets，并把安装收敛成一份可以直接交给 agent 的 guide.md。
 
 ## ADDED Requirements
 
@@ -16,7 +16,7 @@ Web UI MUST 提供可匿名访问的页面，用于：落地页、列出该用�
 - **THEN** UI 展示与不存在的 bucket 相同的未找到页
 
 ### Requirement: Authenticated management pages
-Web UI MUST 让已登录用户注册、登录、登出、创建 bucket（带模板、可见性和可选 description）、上传或删除单份资产、切换可见性、编辑 description、查看配额用量、删除 buckets，以及管理其公开 buckets 上的 issues、评论和 pull requests——全部只由 `api-catalog.md` 中的 `/api/v1/` 端点支撑。跨桶复制走 copies；页上的可复制脚本走 install-script；不要调用未写入该目录的私有端点。About 与页签计数消费 Bucket JSON 的 `description`、`usage_bytes`、`limit_bytes`、`template`、`harness_mix`、`open_issues_count`、`open_pulls_count`；文件表与 README 消费 tree 与 blob。
+Web UI MUST 让已登录用户注册、登录、登出、创建 bucket（带模板、可见性和可选 description）、上传或删除单份资产、切换可见性、编辑 description、查看配额用量、删除 buckets，以及管理其公开 buckets 上的 issues、评论和 pull requests——全部只由 `api-catalog.md` 中的 `/api/v1/` 端点支撑。跨桶复制走 copies；页上的安装入口是该 bucket 的 guide.md 链接，install-script 与 translated fetch 由 guide.md 讲清楚，不在页面控件里重复一遍；不要调用未写入该目录的私有端点。About 与页签计数消费 Bucket JSON 的 `description`、`usage_bytes`、`limit_bytes`、`template`、`harness_mix`、`open_issues_count`、`open_pulls_count`；文件表与 README 消费 tree 与 blob。
 
 #### Scenario: Bucket created through UI
 - **WHEN** 已登录用户填完创建 bucket 表单，选择 `agents` 模板和 `public` 可见性
@@ -31,11 +31,33 @@ Web UI MUST 使用两层视觉系统：对照 pi.dev 的全局框（白底、近
 
 #### Scenario: Read path works without JavaScript
 - **WHEN** 某个公开 bucket 页在禁用 JavaScript 的情况下被加载
-- **THEN** 标题、页签栏、文件表、About 字段和安装脚本文本在所服务的 HTML 中仍然可见
+- **THEN** 标题、页签栏、文件表、About 字段和指向 guide.md 的安装入口在所服务的 HTML 中仍然可见
 
 #### Scenario: Repo well uses GitHub-like chrome
 - **WHEN** 访客打开某个公开 bucket 详情页
 - **THEN** 仓库井坐在 canvas 色上，文件表和 About 是带边框的表面，页签栏带下划线，并且 Install 控件使用品牌红（不是 GitHub 绿）
+
+### Requirement: Bucket install guide
+Web UI MUST 在 `/<username>/<bucket>/guide.md` 提供一份 `text/markdown` 的
+纯文本安装指南，并且它是 Web UI 上**唯一**的安装入口：页面不再直接给出
+安装脚本或 harness 选择器。该文件 MUST 覆盖：四个 harness
+各自的 install-script 一行命令、`translated fetch` 的 URL 与私有桶的
+`Authorization: Bearer` 用法、该 bucket 已存资产及其源 harness、以及
+`npx skills add` 安装 red-bucket skill 的命令。该文件 MUST 指示读它的 agent
+先判断自己所在的 harness，并且 MUST 要求它在安装 red-bucket skill 前先征得
+用户同意；不得指示 agent 未经确认就执行其中任何命令。Phase 1 没有
+red-bucket MCP server，该文件不得暗示存在一个。私有 bucket 的 guide 对匿名
+与非 owner MUST 返回 404，与不存在的 bucket 不可区分。
+
+#### Scenario: Guide serves markdown for a public bucket
+- **WHEN** 未认证访客请求某个公开 bucket 的 `/guide.md`
+- **THEN** 响应是 `text/markdown`，包含该 bucket 的 `username/bucket-name`、
+  四个 harness 的 install-script 一行命令、`translated` URL，以及
+  `npx skills add 370025263/red-bucket --skill red-bucket`
+
+#### Scenario: Guide hidden for private bucket
+- **WHEN** 未认证访客请求某个私有 bucket 的 `/guide.md`
+- **THEN** 响应是 404，与请求不存在的 bucket 不可区分
 
 ### Requirement: Red bucket mark
 产品标识 MUST 是 bucket emoji（U+1FAA3）的第一方 SVG，桶身填充品牌红（`#C41E3A`），提手和桶沿为 `#9B1830`。权威源文件是本次变更里的 `assets/logo.svg`；实现时 MUST 把同一份资源复制进服务的静态文件，归档本变更后仍以服务内那份为准，不得继续依赖 openspec 路径。系统 emoji 不得当作交付 logo。该标识必须出现在站点头里、`red-bucket` 字标旁边（链到首页），并且必须是 favicon。
@@ -56,7 +78,7 @@ Bucket 详情页 MUST 使用 GitHub 仓库式标题 `username / bucket-name` 加
 - **THEN** 页签栏还包含 Settings，并且打开 `/<username>/<bucket-name>/settings` 会显示可见性、description、配额和删除控件
 
 ### Requirement: Code tab file browser
-Code 页签 MUST 把当前工作树（HEAD）呈现为一层目录浏览器，而不是扁平的类型倾倒，根目录在 `/<username>/<bucket-name>`，目录在 `/<username>/<bucket-name>/tree/<path>`。每一文件行必须显示 name、last commit message 和 last-updated time；当该行是一份已存资产时，还必须显示资产类型和源 harness。最近 commit 条必须显示当前树的最新 commit message、author、短 hash（链到 `/commit/<sha>`）、时间戳，以及 commit 计数（链到 `/commits`）。点击目录必须导航到其 `tree` URL；点击文件必须导航到 `/<username>/<bucket-name>/blob/<path>`。GitHub 的 clone/Code 按钮由 Install 控件替代：目标 harness 选择器外加可复制的安装脚本。Owner 必须在此页签上拥有上传入口。Phase 1 没有分支选择器。
+Code 页签 MUST 把当前工作树（HEAD）呈现为一层目录浏览器，而不是扁平的类型倾倒，根目录在 `/<username>/<bucket-name>`，目录在 `/<username>/<bucket-name>/tree/<path>`。每一文件行必须显示 name、last commit message 和 last-updated time；当该行是一份已存资产时，还必须显示资产类型和源 harness。最近 commit 条必须显示当前树的最新 commit message、author、短 hash（链到 `/commit/<sha>`）、时间戳，以及 commit 计数（链到 `/commits`）。点击目录必须导航到其 `tree` URL；点击文件必须导航到 `/<username>/<bucket-name>/blob/<path>`。GitHub 的 clone/Code 按钮由 Install 控件替代：一个指向该 bucket `guide.md` 的可复制链接。该控件 MUST NOT 再重复 harness 选择器或安装脚本文本——那些内容归 guide.md。Owner 必须在此页签上拥有上传入口。Phase 1 没有分支选择器。
 
 #### Scenario: Directory listing with commit bar
 - **WHEN** 访客打开一个根目录含有 `skills/` 目录和 `README.md` 文件、并且至少有一次 commit 的公开 bucket

@@ -2,7 +2,7 @@
 
 ## 背景
 
-全新仓库；唯一既有产物是 `sdd/adr/platform.md` 中的 ADR。OpenSpec 细化前的原文冻在 `sdd/adr/platform.original.md`，不得改动。从中继承的约束：存储是文件系统上的 git（不用对象存储），配额是每用户 5 个 bucket、每 bucket 10MB，Phase 1 不含移动应用和 git 协议访问，前端遵循 pi.dev 的轻量风格，头条验收是 1000 用户 / 并发 10 下 p95 < 1s。动机见 `proposal.md`；行为契约见各 delta specs。
+全新仓库；唯一既有产物是 `sdd/adr/platform.md` 中的 ADR。OpenSpec 细化前的原文冻在 `sdd/adr/platform.original.md`，不得改动。从中继承的约束：存储是文件系统上的 git（不用对象存储），配额是每用户 5 个 bucket、每 bucket 10MB，Phase 1 不含移动应用和 git 协议访问，前端遵循 pi.dev 的轻量风格，头条验收是 1000 用户 / 并发 10 下 p95 < 1s。官方 origin 是 `https://redbucket.store`。动机见 `proposal.md`；行为契约见各 delta specs。
 
 ## 目标 / 非目标
 
@@ -31,7 +31,7 @@
    不可变 id 让用户名/bucket 重命名只动元数据。每 bucket 锁提供规格要求的原子配额「先检查再提交」；在此规模下争用可忽略。备选（非裸仓库加长期存活的 worktree）被否决：更难做成并发安全。
 
 4. 元数据放在 SQLite（WAL）；权威 DDL 与字段映射见本次变更的 `schema-sqlite.md`。
-   九张表：`schema_migrations`、`users`、`tokens`、`buckets`、`assets`、`copies`、`issues`、`issue_comments`、`pull_requests`。git 只保存文件字节与 commit 对象，不建 commits 表。列表、配额、issue/PR/copy 出处需要可查询性；为这些去解析 git 会打爆延迟预算。SQLite 足以支撑 1000 用户 / 并发 10。备选（Postgres）延后到规模需要时再做；数据访问层保持很薄，列类型按可迁 Postgres 来选。API JSON 与表列的对应写在 schema 文档里，实现不得另发明一套字段名。
+   十张表：`schema_migrations`、`users`、`tokens`、`device_codes`、`buckets`、`assets`、`copies`、`issues`、`issue_comments`、`pull_requests`。git 只保存文件字节与 commit 对象，不建 commits 表。列表、配额、issue/PR/copy 出处需要可查询性；为这些去解析 git 会打爆延迟预算。SQLite 足以支撑 1000 用户 / 并发 10。备选（Postgres）延后到规模需要时再做；数据访问层保持很薄，列类型按可迁 Postgres 来选。API JSON 与表列的对应写在 schema 文档里，实现不得另发明一套字段名。
 
 5. 校验作为上传、PR merge 和跨桶 copy 共用的流水线。
    每种资产类型一个校验器，产出机器可读的违规项（`rule id + path`），在内容进入 bucket 的所有入口复用，因此 PR merge 和 `POST .../copies` 不能绕过上传规则（规格要求）。PR 提议内容是文件树替换列表 `{path, content_text|content_base64, delete?}`，存在 SQLite，不是 git patch。
@@ -159,6 +159,5 @@ Logo：产品标识就是 bucket emoji，并把桶身变成红色。交付一份
 
 ## 未决问题
 
-- 域名未定（ADR 留空）——不影响规格；安装脚本必须把基础 URL 做成模板。
 - Phase 1 等价性实验要固定哪些 harness 版本（首次运行时记入各 cross-transfer 文档）。
 - Token 过期策略、速率限制（429）、CSRF、HTTPS 终止留给部署层；Phase 1 规格只要求 logout 撤销当前枚 token、服务端只存哈希。语言与框架已在 `tech-stack.md` 选定，不再是未决项。

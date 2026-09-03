@@ -1,0 +1,6 @@
+<nav class="tabs" aria-label="bucket">
+  <a{% if tab == "code" %} class="active" aria-current="page"{% endif %} href="/{{ bucket.username }}/{{ bucket.name }}">{{ ui.tab_code }}</a>
+  <a{% if tab == "issues" %} class="active" aria-current="page"{% endif %} href="/{{ bucket.username }}/{{ bucket.name }}/issues">{{ ui.tab_issues }} ({{ bucket.open_issues_count }})</a>
+  <a{% if tab == "pulls" %} class="active" aria-current="page"{% endif %} href="/{{ bucket.username }}/{{ bucket.name }}/pulls">{{ ui.tab_pulls }} ({{ bucket.open_pulls_count }})</a>
+  <a class="{% if tab == 'settings' %}active {% endif %}hidden" data-owner-only href="/{{ bucket.username }}/{{ bucket.name }}/settings">{{ ui.tab_settings }}</a>
+</nav>

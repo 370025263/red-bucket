@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Settings · {{ bucket.full_name }}{% endblock %}
+{% block body_class %}repo-page{% endblock %}
+{% block content %}
+<div class="repo-well">
+  <div class="repo-title">
+    <h1><a href="/{{ bucket.username }}">{{ bucket.username }}</a> / <strong>{{ bucket.name }}</strong></h1>
+    <span class="vis-badge">{{ bucket.visibility }}</span>
+  </div>
+  {% set tab = "settings" %}
+  {% include "repo_tabs.html" %}
+
+  <div id="settings-unauthorized" class="surface" style="margin-top:24px">
+    <div class="empty-state">
+      {% include "brand_mark.html" %}
+      <p style="color:var(--rb-fg); font-size:16px; font-weight:600">{{ ui.not_found }}</p>
+      <p>{{ ui.not_found_hint }}</p>
+    </div>
+  </div>
+
+  <div id="settings-owner-panel" class="settings-wrap hidden" data-owner-only>
+    <div class="surface settings-section">
+      <h2>{{ ui.general }}</h2>
+      <p id="settings-usage" class="muted small">{{ ui.usage }}: {{ bucket.usage_bytes or 0 }} / {{ bucket.limit_bytes or 10485760 }}</p>
+      <form class="stack" id="settings-form">
+        <label for="settings-visibility">{{ ui.visibility }}</label>
+        <select id="settings-visibility" name="visibility">
+          <option value="public" {% if bucket.visibility == "public" %}selected{% endif %}>public</option>
+          <option value="private" {% if bucket.visibility == "private" %}selected{% endif %}>private</option>
+        </select>
+        <label for="settings-description">{{ ui.description }}</label>
+        <textarea id="settings-description" name="description" maxlength="350" rows="3">{{ bucket.description or "" }}</textarea>
+        <div class="form-actions">
+          <button class="install" type="submit">{{ ui.save }}</button>
+        </div>
+        <p id="form-error" class="form-error"></p>
+      </form>
+    </div>
+
+    <div class="surface settings-section danger-zone">
+      <h2>{{ ui.danger }}</h2>
+      <p class="muted small" style="margin-top:0">{{ ui.danger_hint }}</p>
+      <form id="delete-bucket-form" data-confirm-prompt="{{ ui.confirm_delete }}">
+        <button type="submit" class="btn-danger">{{ ui.delete_bucket }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  window.RB_BUCKET = {
+    username: {{ bucket.username | tojson }},
+    name: {{ bucket.name | tojson }},
+    full_name: {{ bucket.full_name | tojson }}
+  };
+</script>
+{% endblock %}

@@ -16,7 +16,7 @@
 
 ---
 
-`red-bucket` is an open-source, GitHub- and HuggingFace-style hub for AI agent assets organized under the `user/bucket` namespace. It hosts skills, Model Context Protocol (MCP) tool configurations, system instructions (such as `CLAUDE.md` and `AGENTS.md`), subagents, and plugins.
+`red-bucket` is an open-source, GitHub- and HuggingFace-style hub for AI agent assets organized under the `user/bucket` namespace. The official public origin is https://redbucket.store. It hosts skills, Model Context Protocol (MCP) tool configurations, system instructions (such as `CLAUDE.md` and `AGENTS.md`), subagents, and plugins.
 
 The core value of `red-bucket` is **on-the-fly, fetch-time cross-harness format translation** across four major agent ecosystems:
 - **Codex**
@@ -53,9 +53,11 @@ To fetch and unpack assets from a public bucket directly into your local machine
 
 ```bash
 # Example: Install assets from {username}/{bucket} formatted for Claude Code
-curl -sSL "$RED_BUCKET_URL/api/v1/users/{username}/buckets/{bucket}/install-script?target=claude" \
+curl -sSL "https://redbucket.store/api/v1/users/{username}/buckets/{bucket}/install-script?target=claude" \
   -H "Accept: text/plain" | sh
 ```
+
+*(For self-hosted or local deployments, set `$RED_BUCKET_URL` to override the origin).*
 
 > **Note on Private Buckets:** Private buckets must never expose tokens in pasteable shell scripts. For private buckets, authenticated agents fetch translated archives directly using `Authorization: Bearer <token>` against `GET /api/v1/users/{username}/buckets/{bucket}/translated?target={target}`.
 
@@ -92,7 +94,7 @@ To prevent conceptual ambiguity across tools, APIs, and client agents, three dis
 - **Not a `git clone` or Git protocol service:** Repositories are managed internally through API-driven transactions, not direct Git daemon / SSH clone endpoints.
 - **Not a commercial marketplace:** No monetization, billing, or pricing tiers in Phase 1.
 - **Not GitHub-style social vanity:** No Star, Watch, or Fork tabs in Phase 1.
-- **Current Status:** Server business logic is not implemented yet. This repository currently ships the lint gate, a test skeleton, the agent skill, and the architectural specifications. The hosted SaaS service is not yet live.
+- **Current Status:** The Phase 1 server lives in this repository. Run it locally with the commands below. A hosted SaaS deployment is not required to use the local process.
 
 ---
 
@@ -107,6 +109,14 @@ Detailed architectural decisions, API contracts, database schemas, and workflows
 - [User Interaction & Sequence Flows](openspec/changes/add-red-bucket-mvp/user-flows.md)
 - [Client Skill Architecture](openspec/changes/add-red-bucket-mvp/client-skill.md)
 - [Technology Stack Decisions](openspec/changes/add-red-bucket-mvp/tech-stack.md)
+
+---
+
+## Public site
+
+The official origin is https://redbucket.store. Use that URL for the web UI, `/api/v1/`, and the public install-script one-liner. Self-hosted copies set `RED_BUCKET_URL` to their own public HTTPS origin.
+
+The Phase 1 stack uses Python 3.12, FastAPI, Jinja2, uvicorn, SQLite with WAL mode, system git, and Argon2id.
 
 ---
 

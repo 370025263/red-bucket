@@ -1,0 +1,4 @@
+name = "demo-mcp"
+transport = "stdio"
+command = "uvx"
+args = ["demo-mcp"]
